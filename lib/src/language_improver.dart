@@ -1663,8 +1663,7 @@ class _LanguageImproverState extends State<LanguageImprover>
                                   final isDark =
                                       colorScheme.brightness == Brightness.dark;
 
-                                  // Use a warm amber/orange tint for default translations
-                                  // Creates nice contrast with blue flash
+                                  // Use blue background for container
                                   final defaultBgColor = isDark
                                       ? Colors.blue.withValues(alpha: 0.15)
                                       : Colors.blue.withValues(alpha: 0.08);
@@ -1699,6 +1698,10 @@ class _LanguageImproverState extends State<LanguageImprover>
                                         TextField(
                                           controller: _controllers[key],
                                           decoration: InputDecoration(
+                                            fillColor: isFlashing
+                                                ? null
+                                                : theme.scaffoldBackgroundColor,
+                                            filled: isFlashing ? null : true,
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(8),
