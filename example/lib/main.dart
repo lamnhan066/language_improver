@@ -141,9 +141,9 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () =>
-                    _openLanguageImproverWithScroll(context, 'welcome'),
+                    _openLanguageImproverWithScroll(context, 'profile'),
                 icon: const Icon(Icons.search),
-                label: const Text('Open & Scroll to "welcome"'),
+                label: const Text('Open & Scroll to "profile"'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -265,7 +265,7 @@ class _HomePageState extends State<HomePage> {
         builder: (context) => LanguageImprover(
           languageHelper: LanguageHelper.instance,
           scrollToKey: key,
-          autoSearchOnScroll: true,
+          autoSearchOnScroll: false,
           onTranslationsUpdated: (updatedTranslations) {
             _handleTranslationsUpdated(updatedTranslations);
           },
