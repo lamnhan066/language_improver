@@ -1,0 +1,20 @@
+name: language_improver
+description: "A new Flutter package project."
+version: 0.0.1
+homepage: https://github.com/lamnhan066/language_improver
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  language_helper: ^0.13.0-rc.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  shared_preferences: ^2.5.3
+

@@ -1,0 +1,24 @@
+name: language_improver_example
+description: Example app demonstrating how to use the language_improver package
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  language_helper: ^0.13.0-rc.4
+  language_improver:
+    path: ../
+
+flutter:
+  uses-material-design: true
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
