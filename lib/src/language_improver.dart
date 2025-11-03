@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:language_helper/language_helper.dart';
+import 'package:language_improver/languages/codes.dart';
 
 import 'language_improver_app_bar.dart';
 import 'translation_card.dart';
 import 'translation_conversion.dart';
 import 'translation_helpers.dart';
+
+final improverLanguage = LanguageHelper('LanguageImprover');
 
 /// A stateful widget to list all translations and improve them
 /// based on a default language reference.
@@ -49,14 +52,10 @@ class LanguageImprover extends StatefulWidget {
   /// If not provided, uses the current language.
   final LanguageCodes? initialTargetLanguage;
 
-  /// Initial key to scroll to and focus on.
-  /// If provided, the widget will automatically scroll to this key and
-  /// optionally filter/search for it.
-  final String? scrollToKey;
-
-  /// Whether to automatically search for the [scrollToKey] when provided.
-  /// Defaults to true.
-  final bool autoSearchOnScroll;
+  /// Initial search query.
+  /// If provided and not empty, the widget will automatically search for keys
+  /// matching this query.
+  final String? search;
 
   /// Whether to show the translation key. If false, only shows default and target translations.
   /// Defaults to true.
@@ -69,8 +68,7 @@ class LanguageImprover extends StatefulWidget {
     this.onCancel,
     this.initialDefaultLanguage,
     this.initialTargetLanguage,
-    this.scrollToKey,
-    this.autoSearchOnScroll = true,
+    this.search,
     this.showKey = true,
   });
 
@@ -90,19 +88,28 @@ class _LanguageImproverState extends State<LanguageImprover>
   String _searchQuery = '';
   final Set<String> _allKeys = {};
   final ScrollController _scrollController = ScrollController();
-  final Map<String, GlobalKey> _keyMap = {};
   AnimationController? _flashAnimationController;
   Animation<double>? _flashAnimation;
   String? _flashingKey;
   int _flashRepeatCount = 0;
   static const int _maxFlashRepeats = 10;
+  bool _isInitializingSearch = false;
+
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
+    improverLanguage
+        .initial(
+          data: [LanguageDataProvider.lazyData(languageData)],
+          isDebug: true,
+        )
+        .then((_) => setState(() => loading = false));
+
     _helper = widget.languageHelper ?? LanguageHelper.instance;
 
-    // Initialize flash animation controller (faster animation)
+    // Initialize flash animation controller
     _flashAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -146,20 +153,11 @@ class _LanguageImproverState extends State<LanguageImprover>
           // Trigger rebuild after data is loaded
         });
 
-        // After data is loaded and widget rebuilt, scroll to key
-        if (widget.scrollToKey != null) {
-          // Pre-create the key in the map
-          final targetKey = widget.scrollToKey!;
-          if (!_keyMap.containsKey(targetKey)) {
-            _keyMap[targetKey] = GlobalKey();
-          }
-
-          // Wait for multiple frames to ensure ListView is fully built
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _attemptScrollToKey();
-            }
-          });
+        // Set search text if provided - listener will handle flash animation
+        if (widget.search != null && widget.search!.isNotEmpty) {
+          _isInitializingSearch = true;
+          _searchController.text = widget.search!;
+          // Flag will be cleared by listener after animation is triggered
         }
       }
     });
@@ -167,116 +165,48 @@ class _LanguageImproverState extends State<LanguageImprover>
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
-      });
 
-      // Scroll to target key if it matches the search
-      if (widget.scrollToKey != null &&
-          _filteredKeys.contains(widget.scrollToKey)) {
-        // Wait for the ListView to rebuild with filtered results
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            if (mounted) {
-              _scrollToKey(widget.scrollToKey!);
+        // Trigger flash animation if search exactly matches a key
+        final searchText = _searchController.text.trim();
+        if (searchText.isNotEmpty && _allKeys.contains(searchText)) {
+          // Only trigger if this is a different key than currently flashing
+          if (_flashingKey != searchText) {
+            // Use longer delay when initializing (navigating from another page)
+            // to ensure ListView is fully rendered
+            final delay = _isInitializingSearch
+                ? const Duration(milliseconds: 800)
+                : const Duration(milliseconds: 200);
+
+            // Multiple post-frame callbacks for initialization to ensure widget tree is stable
+            if (_isInitializingSearch) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Future.delayed(delay, () {
+                    if (mounted) {
+                      _isInitializingSearch = false;
+                      _triggerFlashAnimation(searchText);
+                    }
+                  });
+                });
+              });
+            } else {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Future.delayed(delay, () {
+                  if (mounted) {
+                    _triggerFlashAnimation(searchText);
+                  }
+                });
+              });
             }
-          });
-        });
-      }
+          }
+        } else {
+          // Stop flash animation if search doesn't match exactly
+          if (_flashingKey != null) {
+            _stopFlashAnimation();
+          }
+        }
+      });
     });
-
-    // Set search text if scrollToKey is provided and autoSearchOnScroll is true
-    if (widget.scrollToKey != null && widget.autoSearchOnScroll) {
-      // This will be set after data loads in _initializeLanguages
-    }
-  }
-
-  void _scrollToKey(String targetKey) {
-    // Wait for ScrollController to be attached
-    void tryScrollWithController({int retryCount = 0}) {
-      if (!mounted) return;
-
-      // First, try to find the index of the target key in filtered keys
-      final index = _filteredKeys.indexOf(targetKey);
-
-      if (index >= 0 && _scrollController.hasClients) {
-        // Calculate approximate position based on index
-        // Estimate card height: padding (8*2) + margin (8*2) + card height (~200)
-        const estimatedCardHeight = 250.0; // Approximate height per card
-        final estimatedPosition = index * estimatedCardHeight;
-
-        // Clamp position to valid range
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        final scrollPosition = estimatedPosition.clamp(0.0, maxScroll);
-
-        _scrollController.animateTo(
-          scrollPosition,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-
-        // After scrolling, try to use ensureVisible for precise positioning
-        Future.delayed(const Duration(milliseconds: 600), () {
-          if (mounted) {
-            _scrollToKeyPrecise(targetKey);
-          }
-        });
-      } else if (retryCount < 5) {
-        // ScrollController not ready yet, retry
-        Future.delayed(Duration(milliseconds: 100 + (retryCount * 50)), () {
-          tryScrollWithController(retryCount: retryCount + 1);
-        });
-      } else {
-        // Fallback to precise scrolling if controller never becomes ready
-        _scrollToKeyPrecise(targetKey);
-      }
-    }
-
-    tryScrollWithController();
-  }
-
-  /// Precise scrolling using Scrollable.ensureVisible
-  void _scrollToKeyPrecise(String targetKey) {
-    // Create the key if it doesn't exist yet
-    if (!_keyMap.containsKey(targetKey)) {
-      _keyMap[targetKey] = GlobalKey();
-    }
-
-    final globalKey = _keyMap[targetKey];
-
-    // Wait for the widget to be built and context to be available
-    void tryScroll({int retryCount = 0}) {
-      if (!mounted) return;
-
-      if (globalKey?.currentContext != null) {
-        try {
-          Scrollable.ensureVisible(
-            globalKey!.currentContext!,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: 0.1, // Position slightly from top for better visibility
-          );
-
-          // Trigger flash animation when key becomes visible
-          _triggerFlashAnimation(targetKey);
-        } catch (e) {
-          // If scroll fails, retry up to 3 times
-          if (retryCount < 3) {
-            Future.delayed(const Duration(milliseconds: 200), () {
-              tryScroll(retryCount: retryCount + 1);
-            });
-          }
-        }
-      } else {
-        // Context not available yet, retry up to 5 times
-        if (retryCount < 5) {
-          Future.delayed(Duration(milliseconds: 200 + (retryCount * 100)), () {
-            tryScroll(retryCount: retryCount + 1);
-          });
-        }
-      }
-    }
-
-    // Start trying to scroll
-    tryScroll();
   }
 
   Future<void> _initializeLanguages() async {
@@ -288,6 +218,8 @@ class _LanguageImproverState extends State<LanguageImprover>
     if (!codes.contains(_defaultLanguage)) {
       _defaultLanguage = codes.first;
     }
+
+    improverLanguage.change(_defaultLanguage!);
 
     // Set target language
     _targetLanguage = widget.initialTargetLanguage ?? _helper.code;
@@ -344,48 +276,6 @@ class _LanguageImproverState extends State<LanguageImprover>
 
     // Initialize controllers and edited translations
     _initializeControllers();
-
-    // Set search text if scrollToKey is provided and autoSearchOnScroll is true
-    if (widget.scrollToKey != null &&
-        widget.autoSearchOnScroll &&
-        _allKeys.contains(widget.scrollToKey)) {
-      _searchController.text = widget.scrollToKey!;
-    }
-  }
-
-  /// Attempt to scroll to the target key
-  void _attemptScrollToKey() {
-    if (widget.scrollToKey == null) return;
-
-    final targetKey = widget.scrollToKey!;
-
-    // If key is not in all keys, can't scroll to it
-    if (!_allKeys.contains(targetKey)) {
-      return;
-    }
-
-    // If key is not in the filtered keys, try to filter first
-    if (!_filteredKeys.contains(targetKey)) {
-      if (widget.autoSearchOnScroll) {
-        // Set search to show the key
-        _searchController.text = targetKey;
-        // Wait for filtering to complete and widget to rebuild
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            _scrollToKey(targetKey);
-          }
-        });
-      }
-      return;
-    }
-
-    // Key should be visible, wait for ListView to build the item
-    // We need to wait for the widget to actually be built in the ListView
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _scrollToKey(targetKey);
-      }
-    });
   }
 
   /// Ensure data is loaded for a specific language code
@@ -651,6 +541,10 @@ class _LanguageImproverState extends State<LanguageImprover>
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     if (_helper.codes.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -680,6 +574,10 @@ class _LanguageImproverState extends State<LanguageImprover>
         searchController: _searchController,
         searchQuery: _searchQuery,
         onDefaultLanguageChanged: (value) async {
+          if (value != null) {
+            improverLanguage.change(value);
+          }
+
           if (value != null && value != _targetLanguage) {
             // Ensure data is loaded for the default language
             if (!_helper.data.containsKey(value)) {
@@ -744,10 +642,6 @@ class _LanguageImproverState extends State<LanguageImprover>
                     _helper,
                   );
 
-                  // Create or get GlobalKey for this translation key
-                  _keyMap.putIfAbsent(key, () => GlobalKey());
-                  final cardKey = _keyMap[key]!;
-
                   // Get flash animation value if this key is flashing
                   final isFlashing = _flashingKey == key;
                   final flashValue = isFlashing && _flashAnimation != null
@@ -755,7 +649,6 @@ class _LanguageImproverState extends State<LanguageImprover>
                       : 0.0;
 
                   return TranslationCard(
-                    cardKey: cardKey,
                     translationKey: key,
                     defaultText: defaultText,
                     targetValue: targetValue,

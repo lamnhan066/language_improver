@@ -43,7 +43,6 @@ class _SectionColorHelper {
 /// Widget for displaying a single translation card
 class TranslationCard extends StatelessWidget {
   final String translationKey;
-  final GlobalKey cardKey;
   final String defaultText;
   final dynamic targetValue;
   final bool showKey;
@@ -61,7 +60,6 @@ class TranslationCard extends StatelessWidget {
   const TranslationCard({
     super.key,
     required this.translationKey,
-    required this.cardKey,
     required this.defaultText,
     required this.targetValue,
     required this.showKey,
@@ -112,7 +110,6 @@ class TranslationCard extends StatelessWidget {
     return GestureDetector(
       onTap: onCardTap,
       child: Card(
-        key: cardKey,
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
         elevation: elevation,
         color: backgroundColor,
