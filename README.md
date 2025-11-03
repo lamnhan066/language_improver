@@ -5,10 +5,8 @@ A Flutter package that provides a beautiful and intuitive widget for improving t
 ## Features
 
 - 📝 **Side-by-side comparison**: View default (reference) and target translations together for easy improvement
-- 🔍 **Search & filter**: Quickly find translations by key or content
+- 🔍 **Search & filter**: Quickly find translations by key or content with automatic search
 - ✏️ **Edit translations**: Inline editing with text fields for each translation
-- 📍 **Scroll to key**: Automatically scroll to and highlight specific translation keys
-- ✨ **Flash animation**: Visual highlighting with smooth flash animations when scrolling to keys
 - 🌐 **Multi-language support**: Works with all languages supported by `language_helper`
 - 🔢 **LanguageConditions support**: Edit and manage plural forms with `LanguageConditions`
 - 💾 **Save & cancel**: Callbacks for handling updated translations and cancellation
@@ -88,8 +86,7 @@ LanguageImprover(
   languageHelper: LanguageHelper.instance,
   initialDefaultLanguage: LanguageCodes.en,
   initialTargetLanguage: LanguageCodes.vi,
-  scrollToKey: 'welcome_message',
-  autoSearchOnScroll: true,
+  search: 'welcome_message', // Automatically searches for this key
   showKey: true,
   onTranslationsUpdated: (translations) {
     // Process updated translations
@@ -97,13 +94,12 @@ LanguageImprover(
 )
 ```
 
-### Scroll to Specific Key
+### Auto-Search for Specific Key
 
 ```dart
 LanguageImprover(
   languageHelper: LanguageHelper.instance,
-  scrollToKey: 'hello_world', // Automatically scrolls to this key
-  autoSearchOnScroll: true, // Also searches for this key
+  search: 'hello_world', // Automatically searches for this key
   onTranslationsUpdated: (translations) {
     // Handle updates
   },
@@ -121,8 +117,7 @@ LanguageImprover(
 | `onCancel` | `VoidCallback?` | Callback called when the user cancels editing. |
 | `initialDefaultLanguage` | `LanguageCodes?` | Initial default/reference language. If not provided, uses first available language. |
 | `initialTargetLanguage` | `LanguageCodes?` | Initial target language to improve. If not provided, uses current language. |
-| `scrollToKey` | `String?` | Initial key to scroll to and focus on. Widget will automatically scroll to this key. |
-| `autoSearchOnScroll` | `bool` | Whether to automatically search for `scrollToKey` when provided. Defaults to `true`. |
+| `search` | `String?` | Initial search query. If provided and not empty, the widget will automatically search for keys matching this query. |
 | `showKey` | `bool` | Whether to show translation keys. If false, only shows default and target translations. Defaults to `true`. |
 
 ## Features in Detail
@@ -143,13 +138,11 @@ Search filters translations by:
 - Translation keys
 - Translation content (both default and target languages)
 
-### Scroll to Key
+When `search` parameter is provided:
 
-When `scrollToKey` is provided:
-
-- Automatically scrolls to the specified key
-- Optionally searches for the key (if `autoSearchOnScroll` is true)
-- Flashes the key with an animation to draw attention
+- Automatically populates the search field with the query
+- Filters the translation list to show matching translations
+- Works instantly without requiring user interaction
 
 ### LanguageConditions Support
 
@@ -175,6 +168,12 @@ The widget fully supports `LanguageConditions` for handling plural forms:
 ### Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+Regenerates the language data by running:
+
+```shell
+dart run language_helper:generate --languages=vi,en,es,pt,fr,de,zh,zh_TW,ja,ko,id,ru,it,tr,ar,hi --ignore-todo=en
+```
 
 ### License
 
