@@ -129,17 +129,17 @@ packages:
     dependency: "direct main"
     description:
       name: language_helper
-      sha256: "1928eed33db8a165ffa661156c4afe5f493cb32056619a069b8246326e5b498f"
+      sha256: "713b913e4cf4202de4a7253506e1e65bf6a24ab30c7c4dc980bc497b5d7eca37"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.0-rc.6"
+    version: "0.13.0-rc.8"
   language_improver:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.1"
+    version: "0.0.2"
   leak_tracker:
     dependency: transitive
     description:
@@ -172,6 +172,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  lite_logger:
+    dependency: transitive
+    description:
+      name: lite_logger
+      sha256: "3973918d011028635e786fcefb0a24e302ab30df9d304349a76e689bac32260b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   matcher:
     dependency: transitive
     description:
