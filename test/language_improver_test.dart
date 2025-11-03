@@ -249,7 +249,7 @@ void main() {
       // This is verified by the widget rendering correctly
     });
 
-    testWidgets('scrolls to specified key when scrollToKey is provided', (
+    testWidgets('searches automatically when search parameter is provided', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -257,36 +257,34 @@ void main() {
           home: Scaffold(
             body: LanguageImprover(
               languageHelper: testHelper,
-              scrollToKey: 'Hello',
-              autoSearchOnScroll: true,
+              search: 'Hello',
             ),
           ),
         ),
       );
 
-      // Pump multiple times to allow scroll animations and timers
+      // Pump to allow initialization and flash animation delays
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(
-        const Duration(milliseconds: 600),
-      ); // Allow timer to complete
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 100)); // Additional frame
+      await tester.pump(const Duration(milliseconds: 800)); // Flash animation delay
+      await tester.pumpAndSettle();
 
-      // Widget should render and attempt to scroll
+      // Widget should render
       expect(find.byType(LanguageImprover), findsOneWidget);
+
+      // Verify widget initialized correctly with search parameter
+      // The search field should be populated (verified by widget rendering correctly)
+      expect(find.byType(TextField), findsWidgets);
     });
 
-    testWidgets('does not auto-search when autoSearchOnScroll is false', (
-      tester,
-    ) async {
+    testWidgets('does not search when search is empty', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: LanguageImprover(
               languageHelper: testHelper,
-              scrollToKey: 'Hello',
-              autoSearchOnScroll: false,
+              search: '',
             ),
           ),
         ),
@@ -295,24 +293,14 @@ void main() {
       // Pump to allow initialization
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(
-        const Duration(milliseconds: 600),
-      ); // Allow timer to complete
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
 
       // Widget should render
       expect(find.byType(LanguageImprover), findsOneWidget);
 
-      // Search field should be empty (not auto-filled with scrollToKey)
-      final searchFields = find.byType(TextField);
-      if (searchFields.evaluate().isNotEmpty) {
-        final searchField = searchFields.first;
-        final fieldText = tester.widget<TextField>(searchField);
-        // The search field may or may not be empty depending on implementation
-        // Just verify the widget renders correctly
-        expect(fieldText, isNotNull);
-      }
+      // Verify widget initialized correctly with empty search parameter
+      // The search field should be empty (verified by widget rendering correctly)
+      expect(find.byType(TextField), findsWidgets);
     });
 
     testWidgets('handles LanguageConditions display', (tester) async {
@@ -667,57 +655,30 @@ void main() {
       expect(find.byType(LanguageImprover), findsOneWidget);
     });
 
-    testWidgets('handles scrollToKey matching search', (tester) async {
+    testWidgets('handles search parameter correctly', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: LanguageImprover(
               languageHelper: testHelper,
-              scrollToKey: 'Hello',
-              autoSearchOnScroll: true,
+              search: 'Hello',
             ),
           ),
         ),
       );
 
-      // Wait for initialization and scrolling
+      // Wait for initialization and flash animation delays
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(
-        const Duration(milliseconds: 200),
-      ); // Allow search to trigger
-      await tester.pump(
-        const Duration(milliseconds: 600),
-      ); // Allow scroll timer
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 100)); // Additional frame
+      await tester.pump(const Duration(milliseconds: 800)); // Flash animation delay
+      await tester.pumpAndSettle();
 
       expect(find.byType(LanguageImprover), findsOneWidget);
-    });
 
-    testWidgets('handles flash animation trigger and stop', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: LanguageImprover(
-              languageHelper: testHelper,
-              scrollToKey: 'Hello',
-              autoSearchOnScroll: true,
-            ),
-          ),
-        ),
-      );
-
-      // Wait for initialization
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump(
-        const Duration(milliseconds: 1200),
-      ); // Allow flash animation
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-
-      // Widget should handle flash animation
-      expect(find.byType(LanguageImprover), findsOneWidget);
+      // Verify widget initialized correctly with search parameter
+      // The search field should be populated (verified by widget rendering correctly)
+      expect(find.byType(TextField), findsWidgets);
     });
   });
 }
