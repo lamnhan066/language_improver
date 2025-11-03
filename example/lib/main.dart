@@ -10,6 +10,7 @@ void main() async {
     data: [LanguageDataProvider.data(sampleTranslations)],
     initialCode: LanguageCodes.en,
     useInitialCodeWhenUnavailable: false,
+    isDebug: true,
   );
 
   runApp(const MyApp());
@@ -25,7 +26,7 @@ LanguageData sampleTranslations = {
     'please': 'Please',
     'items_count': const LanguageConditions(
       param: 'count',
-      conditions: {'0': 'No items', '1': '1 item', 'default': '@{count} items'},
+      conditions: {'0': 'No items', '1': '1 item', '_': '@{count} items'},
     ),
     'user_greeting': 'Hello, @{name}!',
     'settings': 'Settings',
@@ -43,11 +44,7 @@ LanguageData sampleTranslations = {
     'please': 'Xin lỗi',
     'items_count': const LanguageConditions(
       param: 'count',
-      conditions: {
-        '0': 'Không có mục',
-        '1': '1 mục',
-        'default': '@{count} mục',
-      },
+      conditions: {'0': 'Không có mục', '1': '1 mục', '_': '@{count} mục'},
     ),
     'user_greeting': 'Xin chào, @{name}!',
     'settings': 'Cài đặt',
@@ -65,7 +62,7 @@ LanguageData sampleTranslations = {
     'please': '请',
     'items_count': const LanguageConditions(
       param: 'count',
-      conditions: {'0': '没有项目', '1': '1 项目', 'default': '@{count} 项目'},
+      conditions: {'0': '没有项目', '1': '1 项目', '_': '@{count} 项目'},
     ),
     'user_greeting': '你好, @{name}!',
     'settings': '设置',
