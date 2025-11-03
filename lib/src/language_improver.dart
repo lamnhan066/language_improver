@@ -174,7 +174,7 @@ class _LanguageImproverState extends State<LanguageImprover>
             // Use longer delay when initializing (navigating from another page)
             // to ensure ListView is fully rendered
             final delay = _isInitializingSearch
-                ? const Duration(milliseconds: 800)
+                ? const Duration(milliseconds: 600)
                 : const Duration(milliseconds: 200);
 
             // Multiple post-frame callbacks for initialization to ensure widget tree is stable
@@ -541,207 +541,216 @@ class _LanguageImproverState extends State<LanguageImprover>
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_helper.codes.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('Language Improver'.tr),
-          elevation: 0,
-          scrolledUnderElevation: 2,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-          surfaceTintColor: Colors.transparent,
-          shadowColor: Colors.black.withValues(alpha: 0.08),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-        ),
-        body: Center(child: Text('No languages available'.tr)),
-      );
-    }
-
-    return Scaffold(
-      appBar: LanguageImproverAppBar(
-        helper: _helper,
-        defaultLanguage: _defaultLanguage,
-        targetLanguage: _targetLanguage,
-        searchController: _searchController,
-        searchQuery: _searchQuery,
-        onDefaultLanguageChanged: (value) async {
-          if (value != null) {
-            improverLanguage.change(value);
+    return LanguageScope(
+      languageHelper: improverLanguage,
+      child: LanguageBuilder(
+        builder: (context) {
+          if (loading) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          if (value != null && value != _targetLanguage) {
-            // Ensure data is loaded for the default language
-            if (!_helper.data.containsKey(value)) {
-              final currentCode = _helper.code;
-              // Load data for the default language
-              await _helper.change(value);
-              // Restore original language if it was different
-              if (currentCode != value) {
-                await _helper.change(currentCode);
-              }
-            }
-            setState(() {
-              _defaultLanguage = value;
-            });
-          }
-        },
-        onTargetLanguageChanged: (value) async {
-          if (value != null) {
-            // Ensure data is loaded for the target language
-            if (!_helper.data.containsKey(value)) {
-              final currentCode = _helper.code;
-              // Load data for the target language
-              await _helper.change(value);
-              // Restore original language if it was different
-              if (currentCode != value) {
-                await _helper.change(currentCode);
-              }
-            }
-            setState(() {
-              _targetLanguage = value;
-              _initializeControllers();
-            });
-          }
-        },
-      ),
-      body: _filteredKeys.isEmpty
-          ? Center(child: Text('No translations found'.tr))
-          : Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: ListView.separated(
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 16),
-                controller: _scrollController,
-                padding: const EdgeInsets.only(
-                  top: 12,
-                  left: 8,
-                  right: 8,
-                  bottom: 80,
+          if (_helper.codes.isEmpty) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Language Improver'.tr),
+                elevation: 0,
+                scrolledUnderElevation: 2,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                surfaceTintColor: Colors.transparent,
+                shadowColor: Colors.black.withValues(alpha: 0.08),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
                 ),
-                itemCount: _filteredKeys.length,
-                itemBuilder: (context, index) {
-                  final key = _filteredKeys[index];
-                  final defaultText = TranslationHelpers.getDefaultText(
-                    key,
-                    _defaultLanguage,
-                    _helper,
-                  );
-                  final targetValue = TranslationHelpers.getTargetValue(
-                    key,
-                    _targetLanguage,
-                    _editedTranslations,
-                    _helper,
-                  );
+              ),
+              body: Center(child: Text('No languages available'.tr)),
+            );
+          }
 
-                  // Get flash animation value if this key is flashing
-                  final isFlashing = _flashingKey == key;
-                  final flashValue = isFlashing && _flashAnimation != null
-                      ? _flashAnimation!.value
-                      : 0.0;
+          return Scaffold(
+            appBar: LanguageImproverAppBar(
+              helper: _helper,
+              defaultLanguage: _defaultLanguage,
+              targetLanguage: _targetLanguage,
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onDefaultLanguageChanged: (value) async {
+                if (value != null) {
+                  improverLanguage.change(value);
+                }
 
-                  return TranslationCard(
-                    translationKey: key,
-                    defaultText: defaultText,
-                    targetValue: targetValue,
-                    showKey: widget.showKey,
-                    isFlashing: isFlashing,
-                    flashValue: flashValue,
-                    defaultLanguage: _defaultLanguage,
-                    targetLanguage: _targetLanguage,
-                    textController: _controllers[key],
-                    defaultCondition:
-                        TranslationHelpers.getDefaultLanguageCondition(
+                if (value != null && value != _targetLanguage) {
+                  // Ensure data is loaded for the default language
+                  if (!_helper.data.containsKey(value)) {
+                    final currentCode = _helper.code;
+                    // Load data for the default language
+                    await _helper.change(value);
+                    // Restore original language if it was different
+                    if (currentCode != value) {
+                      await _helper.change(currentCode);
+                    }
+                  }
+                  setState(() {
+                    _defaultLanguage = value;
+                  });
+                }
+              },
+              onTargetLanguageChanged: (value) async {
+                if (value != null) {
+                  // Ensure data is loaded for the target language
+                  if (!_helper.data.containsKey(value)) {
+                    final currentCode = _helper.code;
+                    // Load data for the target language
+                    await _helper.change(value);
+                    // Restore original language if it was different
+                    if (currentCode != value) {
+                      await _helper.change(currentCode);
+                    }
+                  }
+                  setState(() {
+                    _targetLanguage = value;
+                    _initializeControllers();
+                  });
+                }
+              },
+            ),
+            body: _filteredKeys.isEmpty
+                ? Center(child: Text('No translations found'.tr))
+                : Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: ListView.separated(
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(
+                        top: 12,
+                        left: 8,
+                        right: 8,
+                        bottom: 80,
+                      ),
+                      itemCount: _filteredKeys.length,
+                      itemBuilder: (context, index) {
+                        final key = _filteredKeys[index];
+                        final defaultText = TranslationHelpers.getDefaultText(
                           key,
                           _defaultLanguage,
                           _helper,
-                        ),
-                    onCardTap: () => _onCardTap(key),
-                    onConvertStringToCondition: targetValue is String
-                        ? () => _convertStringToLanguageCondition(
-                            key,
-                            targetValue,
-                          )
-                        : null,
-                    onConvertConditionToString:
-                        targetValue is LanguageConditions
-                        ? () => _convertLanguageConditionToString(
-                            key,
-                            targetValue,
-                          )
-                        : null,
-                    onEditCondition: targetValue is LanguageConditions
-                        ? () => _editLanguageCondition(key, targetValue)
-                        : null,
-                  );
-                },
+                        );
+                        final targetValue = TranslationHelpers.getTargetValue(
+                          key,
+                          _targetLanguage,
+                          _editedTranslations,
+                          _helper,
+                        );
+
+                        // Get flash animation value if this key is flashing
+                        final isFlashing = _flashingKey == key;
+                        final flashValue = isFlashing && _flashAnimation != null
+                            ? _flashAnimation!.value
+                            : 0.0;
+
+                        return TranslationCard(
+                          translationKey: key,
+                          defaultText: defaultText,
+                          targetValue: targetValue,
+                          showKey: widget.showKey,
+                          isFlashing: isFlashing,
+                          flashValue: flashValue,
+                          defaultLanguage: _defaultLanguage,
+                          targetLanguage: _targetLanguage,
+                          textController: _controllers[key],
+                          defaultCondition:
+                              TranslationHelpers.getDefaultLanguageCondition(
+                                key,
+                                _defaultLanguage,
+                                _helper,
+                              ),
+                          onCardTap: () => _onCardTap(key),
+                          onConvertStringToCondition: targetValue is String
+                              ? () => _convertStringToLanguageCondition(
+                                  key,
+                                  targetValue,
+                                )
+                              : null,
+                          onConvertConditionToString:
+                              targetValue is LanguageConditions
+                              ? () => _convertLanguageConditionToString(
+                                  key,
+                                  targetValue,
+                                )
+                              : null,
+                          onEditCondition: targetValue is LanguageConditions
+                              ? () => _editLanguageCondition(key, targetValue)
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+            floatingActionButton: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _cancelEditing,
+                    icon: const Icon(Icons.close, size: 20),
+                    label: Text(
+                      'Cancel'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 1.5,
+                      ),
+                      foregroundColor: Theme.of(context).colorScheme.outline,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _saveTranslations,
+                    icon: const Icon(Icons.save, size: 20),
+                    label: Text(
+                      'Save'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      elevation: 2,
+                    ),
+                  ),
+                ],
               ),
             ),
-      floatingActionButton: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            OutlinedButton.icon(
-              onPressed: _cancelEditing,
-              icon: const Icon(Icons.close, size: 20),
-              label: Text(
-                'Cancel'.tr,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
-                  width: 1.5,
-                ),
-                foregroundColor: Theme.of(context).colorScheme.outline,
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: _saveTranslations,
-              icon: const Icon(Icons.save, size: 20),
-              label: Text(
-                'Save'.tr,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                elevation: 2,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
