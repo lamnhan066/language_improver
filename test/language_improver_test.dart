@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:language_helper/language_helper.dart';
-import 'package:language_helper/src/utils/print_debug.dart';
 import 'package:language_improver/src/language_improver.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,7 +10,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    isTestingDebugLog = true;
     // Mock SharedPreferences for testing
     SharedPreferences.setMockInitialValues({});
   });
@@ -255,10 +253,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LanguageImprover(
-              languageHelper: testHelper,
-              search: 'Hello',
-            ),
+            body: LanguageImprover(languageHelper: testHelper, search: 'Hello'),
           ),
         ),
       );
@@ -267,7 +262,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100)); // Additional frame
-      await tester.pump(const Duration(milliseconds: 800)); // Flash animation delay
+      await tester.pump(
+        const Duration(milliseconds: 800),
+      ); // Flash animation delay
       await tester.pumpAndSettle();
 
       // Widget should render
@@ -282,10 +279,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LanguageImprover(
-              languageHelper: testHelper,
-              search: '',
-            ),
+            body: LanguageImprover(languageHelper: testHelper, search: ''),
           ),
         ),
       );
@@ -659,10 +653,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LanguageImprover(
-              languageHelper: testHelper,
-              search: 'Hello',
-            ),
+            body: LanguageImprover(languageHelper: testHelper, search: 'Hello'),
           ),
         ),
       );
@@ -671,7 +662,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100)); // Additional frame
-      await tester.pump(const Duration(milliseconds: 800)); // Flash animation delay
+      await tester.pump(
+        const Duration(milliseconds: 800),
+      ); // Flash animation delay
       await tester.pumpAndSettle();
 
       expect(find.byType(LanguageImprover), findsOneWidget);
