@@ -3,6 +3,43 @@ import 'package:language_helper/language_helper.dart';
 
 import 'expandable_text.dart';
 
+/// Color scheme for section styling
+class _SectionColors {
+  final Color backgroundColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _SectionColors({
+    required this.backgroundColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+}
+
+/// Helper class for generating section colors
+class _SectionColorHelper {
+  /// Generates section colors for light/dark theme
+  /// [baseColor] is the base MaterialColor (e.g., Colors.blue, Colors.orange)
+  /// [lightShade] is the shade number for light theme text (e.g., 700, 800)
+  /// [darkShade] is the shade number for dark theme text (e.g., 200)
+  static _SectionColors getSectionColors(
+    MaterialColor baseColor,
+    bool isDark,
+    int lightShade,
+    int darkShade,
+  ) {
+    return _SectionColors(
+      backgroundColor: isDark
+          ? baseColor.withValues(alpha: 0.15)
+          : baseColor.withValues(alpha: 0.08),
+      textColor: isDark ? baseColor[darkShade]! : baseColor[lightShade]!,
+      borderColor: isDark
+          ? baseColor.withValues(alpha: 0.3)
+          : baseColor.withValues(alpha: 0.2),
+    );
+  }
+}
+
 /// Widget for displaying a single translation card
 class TranslationCard extends StatelessWidget {
   final String translationKey;
@@ -120,25 +157,21 @@ class TranslationCard extends StatelessWidget {
   }
 
   Widget _buildKeySection(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
-
-    final keyBgColor = isDark
-        ? Colors.blue.withValues(alpha: 0.15)
-        : Colors.blue.withValues(alpha: 0.08);
-    final keyTextColor = isDark ? Colors.blue.shade200 : Colors.blue.shade700;
-    final keyBorderColor = isDark
-        ? Colors.blue.withValues(alpha: 0.3)
-        : Colors.blue.withValues(alpha: 0.2);
+    final isDark = Theme.of(context).colorScheme.brightness == Brightness.dark;
+    final colors = _SectionColorHelper.getSectionColors(
+      Colors.blue,
+      isDark,
+      700,
+      200,
+    );
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: keyBgColor,
+        color: colors.backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: keyBorderColor),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -149,7 +182,7 @@ class TranslationCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: keyTextColor,
+              color: colors.textColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -157,7 +190,7 @@ class TranslationCard extends StatelessWidget {
             translationKey,
             style: TextStyle(
               fontSize: 14,
-              color: keyTextColor,
+              color: colors.textColor,
               fontWeight: FontWeight.w500,
               fontFamily: 'monospace',
             ),
@@ -170,27 +203,21 @@ class TranslationCard extends StatelessWidget {
   }
 
   Widget _buildDefaultStringSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
-
-    final defaultBgColor = isDark
-        ? Colors.orange.withValues(alpha: 0.15)
-        : Colors.orange.withValues(alpha: 0.08);
-    final defaultTextColor = isDark
-        ? Colors.orange.shade200
-        : Colors.orange.shade800;
-    final defaultBorderColor = isDark
-        ? Colors.orange.withValues(alpha: 0.3)
-        : Colors.orange.withValues(alpha: 0.2);
+    final isDark = Theme.of(context).colorScheme.brightness == Brightness.dark;
+    final colors = _SectionColorHelper.getSectionColors(
+      Colors.orange,
+      isDark,
+      800,
+      200,
+    );
 
     return Container(
       padding: const EdgeInsets.all(8),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: defaultBgColor,
+        color: colors.backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: defaultBorderColor),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +227,7 @@ class TranslationCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: defaultTextColor,
+              color: colors.textColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -216,27 +243,21 @@ class TranslationCard extends StatelessWidget {
   Widget _buildDefaultConditionSection(BuildContext context) {
     if (defaultCondition == null) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
-
-    final defaultBgColor = isDark
-        ? Colors.orange.withValues(alpha: 0.15)
-        : Colors.orange.withValues(alpha: 0.08);
-    final defaultTextColor = isDark
-        ? Colors.orange.shade200
-        : Colors.orange.shade800;
-    final defaultBorderColor = isDark
-        ? Colors.orange.withValues(alpha: 0.3)
-        : Colors.orange.withValues(alpha: 0.2);
+    final isDark = Theme.of(context).colorScheme.brightness == Brightness.dark;
+    final colors = _SectionColorHelper.getSectionColors(
+      Colors.orange,
+      isDark,
+      800,
+      200,
+    );
 
     return Container(
       padding: const EdgeInsets.all(8),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: defaultBgColor,
+        color: colors.backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: defaultBorderColor),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +267,7 @@ class TranslationCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: defaultTextColor,
+              color: colors.textColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -318,22 +339,19 @@ class TranslationCard extends StatelessWidget {
     ThemeData theme,
     bool isDark,
   ) {
-    final defaultBgColor = isDark
-        ? Colors.blue.withValues(alpha: 0.15)
-        : Colors.blue.withValues(alpha: 0.08);
-    final defaultTextColor = isDark
-        ? Colors.blue.shade200
-        : Colors.blue.shade800;
-    final defaultBorderColor = isDark
-        ? Colors.blue.withValues(alpha: 0.3)
-        : Colors.blue.withValues(alpha: 0.2);
+    final colors = _SectionColorHelper.getSectionColors(
+      Colors.blue,
+      isDark,
+      800,
+      200,
+    );
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: defaultBgColor,
+        color: colors.backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: defaultBorderColor),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +361,7 @@ class TranslationCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: defaultTextColor,
+              color: colors.textColor,
             ),
           ),
           const SizedBox(height: 4),

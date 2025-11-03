@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:language_helper/language_helper.dart';
 
-import 'language_condition_editor_dialog.dart';
+import 'language_improver_app_bar.dart';
 import 'translation_card.dart';
+import 'translation_conversion.dart';
+import 'translation_helpers.dart';
 
 /// A stateful widget to list all translations and improve them
 /// based on a default language reference.
@@ -515,116 +517,21 @@ class _LanguageImproverState extends State<LanguageImprover>
     if (_searchQuery.isEmpty) return _allKeys.toList();
 
     return _allKeys.where((key) {
-      final defaultText = _getDefaultText(key);
-      final targetText = _getTargetText(key);
+      final defaultText = TranslationHelpers.getDefaultText(
+        key,
+        _defaultLanguage,
+        _helper,
+      );
+      final targetText = TranslationHelpers.getTargetText(
+        key,
+        _targetLanguage,
+        _editedTranslations,
+        _helper,
+      );
       return key.toLowerCase().contains(_searchQuery) ||
           defaultText.toLowerCase().contains(_searchQuery) ||
           targetText.toLowerCase().contains(_searchQuery);
     }).toList();
-  }
-
-  String _getDefaultText(String key) {
-    if (_defaultLanguage == null) return '';
-
-    // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        _helper.dataOverrides[_defaultLanguage]?[key] ??
-        _helper.data[_defaultLanguage]?[key];
-
-    if (value == null) return '';
-    if (value is String) return value;
-    if (value is LanguageConditions) {
-      return 'LanguageConditions (${value.conditions.keys.join(', ')})';
-    }
-    return value.toString();
-  }
-
-  String _getTargetText(String key) {
-    if (_editedTranslations.containsKey(key)) {
-      final value = _editedTranslations[key];
-      if (value is String) return value;
-      if (value is LanguageConditions) {
-        return 'LanguageConditions (${value.conditions.keys.join(', ')})';
-      }
-      return value?.toString() ?? '';
-    }
-
-    if (_targetLanguage == null) return '';
-
-    // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        _helper.dataOverrides[_targetLanguage]?[key] ??
-        _helper.data[_targetLanguage]?[key];
-
-    if (value == null) return '';
-    if (value is String) return value;
-    if (value is LanguageConditions) {
-      return 'LanguageConditions (${value.conditions.keys.join(', ')})';
-    }
-    return value.toString();
-  }
-
-  dynamic _getTargetValue(String key) {
-    if (_editedTranslations.containsKey(key)) {
-      return _editedTranslations[key];
-    }
-
-    if (_targetLanguage == null) return null;
-
-    // Check both dataOverrides and data (overrides take precedence)
-    return _helper.dataOverrides[_targetLanguage]?[key] ??
-        _helper.data[_targetLanguage]?[key];
-  }
-
-  LanguageConditions? _getDefaultLanguageCondition(String key) {
-    if (_defaultLanguage == null) return null;
-
-    // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        _helper.dataOverrides[_defaultLanguage]?[key] ??
-        _helper.data[_defaultLanguage]?[key];
-
-    if (value is LanguageConditions) {
-      return value;
-    }
-    return null;
-  }
-
-  /// Compare two values to check if they are different
-  bool _hasValueChanged(dynamic original, dynamic current) {
-    // Handle null cases
-    if (original == null && current == null) return false;
-    if (original == null || current == null) return true;
-
-    // If types are different, consider it changed (e.g., String -> LanguageConditions)
-    if (original.runtimeType != current.runtimeType) return true;
-
-    // Handle String comparison
-    if (original is String && current is String) {
-      return original != current;
-    }
-
-    // Handle LanguageConditions comparison
-    if (original is LanguageConditions && current is LanguageConditions) {
-      if (original.param != current.param) return true;
-      if (original.conditions.length != current.conditions.length) return true;
-
-      // Compare each condition
-      for (final entry in original.conditions.entries) {
-        final currentValue = current.conditions[entry.key];
-        if (currentValue != entry.value) return true;
-      }
-
-      // Check for new conditions in current
-      for (final entry in current.conditions.entries) {
-        if (!original.conditions.containsKey(entry.key)) return true;
-      }
-
-      return false;
-    }
-
-    // For other types, use equality check
-    return original != current;
   }
 
   Future<void> _saveTranslations() async {
@@ -637,7 +544,7 @@ class _LanguageImproverState extends State<LanguageImprover>
       final originalValue = _originalTranslations[key];
 
       // Check if the value has changed
-      if (_hasValueChanged(originalValue, currentValue)) {
+      if (TranslationHelpers.hasValueChanged(originalValue, currentValue)) {
         changedTranslations[key] = currentValue;
       }
     }
@@ -697,211 +604,15 @@ class _LanguageImproverState extends State<LanguageImprover>
   }
 
   void _convertStringToLanguageCondition(String key, String stringValue) {
-    // Show dialog to get parameter name first
-    showDialog(
-      context: context,
-      builder: (context) {
-        final paramController = TextEditingController(text: 'count');
-        bool isDisposed = false;
-
-        return PopScope(
-          canPop: true,
-          onPopInvokedWithResult: (_, _) {
-            // Only dispose if not already disposed
-            if (!isDisposed) {
-              isDisposed = true;
-              paramController.dispose();
-            }
-          },
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text('Convert to Condition'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Enter the parameter name that will be used in the translation:',
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: paramController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: 'Parameter Name',
-                    hintText: 'e.g., count, number, hours',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    helperText: 'This parameter will be used in conditions',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Builder(
-                  builder: (context) {
-                    final theme = Theme.of(context);
-                    final colorScheme = theme.colorScheme;
-                    final isDark = colorScheme.brightness == Brightness.dark;
-                    final infoBgColor = isDark
-                        ? Colors.blue.withValues(alpha: 0.15)
-                        : Colors.blue.withValues(alpha: 0.08);
-                    final infoTextColor = isDark
-                        ? Colors.blue.shade200
-                        : Colors.blue.shade800;
-                    final infoBorderColor = isDark
-                        ? Colors.blue.withValues(alpha: 0.3)
-                        : Colors.blue.withValues(alpha: 0.2);
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: infoBgColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: infoBorderColor),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Current value:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: infoTextColor,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            stringValue,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: infoTextColor,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'This will become the default condition (_)',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  // Don't dispose here - let PopScope handle it
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final param = paramController.text.trim();
-                  if (param.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Parameter name cannot be empty'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-                  final paramValue = param;
-                  // Pop dialog - PopScope will handle controller disposal
-                  Navigator.of(context).pop();
-
-                  // Create a default LanguageConditions with the current string
-                  final newCondition = LanguageConditions(
-                    param: paramValue,
-                    conditions: {
-                      '_': stringValue, // Default condition
-                    },
-                  );
-
-                  // Now show the editor to let user add more conditions
-                  // Need to access the helper from parent context
-                  final helper = _helper;
-                  final defaultLanguage = _defaultLanguage;
-                  final defaultCondition = defaultLanguage != null
-                      ? (helper.data[defaultLanguage]?[key]
-                                is LanguageConditions
-                            ? helper.data[defaultLanguage]![key]
-                                  as LanguageConditions
-                            : null)
-                      : null;
-
-                  showDialog(
-                    context: context,
-                    builder: (context) => LanguageConditionEditorDialog(
-                      key: Key('$key-convert'),
-                      translationKey: key,
-                      initialCondition: newCondition,
-                      defaultCondition: defaultCondition,
-                      onSave: (editedCondition) {
-                        // Get the controller to dispose later
-                        final controllerToDispose = _controllers[key];
-
-                        setState(() {
-                          // Remove the controller from the map first
-                          _controllers.remove(key);
-
-                          // Update to LanguageConditions
-                          _editedTranslations[key] = editedCondition;
-                        });
-
-                        // Dispose the controller after the frame completes
-                        // to avoid using it after disposal
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          controllerToDispose?.dispose();
-                        });
-
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Converted to Condition successfully',
-                            ),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-                child: const Text('Continue'),
-              ),
-            ],
-          ),
-        );
-      },
+    TranslationConversion.convertStringToLanguageCondition(
+      context,
+      key,
+      stringValue,
+      _helper,
+      _defaultLanguage,
+      _controllers,
+      _editedTranslations,
+      () => setState(() {}),
     );
   }
 
@@ -909,159 +620,29 @@ class _LanguageImproverState extends State<LanguageImprover>
     String key,
     LanguageConditions condition,
   ) {
-    // Find the default condition value (_ or default) or use the first one
-    String? defaultConditionKey;
-    String? defaultConditionValue;
-
-    // Try to find '_' or 'default' first
-    if (condition.conditions.containsKey('_')) {
-      defaultConditionKey = '_';
-      defaultConditionValue = condition.conditions['_']?.toString();
-    } else if (condition.conditions.containsKey('default')) {
-      defaultConditionKey = 'default';
-      defaultConditionValue = condition.conditions['default']?.toString();
-    } else if (condition.conditions.isNotEmpty) {
-      // Use the first condition if no default found
-      final firstEntry = condition.conditions.entries.first;
-      defaultConditionKey = firstEntry.key;
-      defaultConditionValue = firstEntry.value?.toString();
-    }
-
-    if (defaultConditionValue == null || defaultConditionValue.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No valid condition value found'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Show dialog to confirm and optionally choose which condition to use
-    showDialog(
-      context: context,
-      builder: (context) {
-        String? selectedKey = defaultConditionKey;
-        String? selectedValue = defaultConditionValue;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text('Convert to String'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Select which condition value to use as the string:',
-                  ),
-                  const SizedBox(height: 12),
-                  ...condition.conditions.entries.map((e) {
-                    final isDefault =
-                        e.key == '_' ||
-                        e.key == 'default' ||
-                        e.key == selectedKey;
-                    return RadioListTile<String>(
-                      title: Text(
-                        e.key,
-                        style: TextStyle(
-                          fontWeight: isDefault
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: Text(
-                        e.value.toString(),
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      value: e.key,
-                      // ignore: deprecated_member_use
-                      groupValue: selectedKey,
-                      // ignore: deprecated_member_use
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedKey = value;
-                          selectedValue = e.value?.toString() ?? '';
-                        });
-                      },
-                    );
-                  }),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (selectedKey == null || selectedValue == null) {
-                    return;
-                  }
-                  Navigator.of(context).pop();
-
-                  // Convert to String
-                  setState(() {
-                    // Remove LanguageConditions from edited translations
-                    _editedTranslations[key] = selectedValue!;
-
-                    // Create a TextEditingController for the new String value
-                    final controller = TextEditingController(
-                      text: selectedValue!,
-                    );
-                    controller.addListener(() {
-                      _editedTranslations[key] = controller.text;
-                    });
-                    _controllers[key] = controller;
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Converted to String using condition "$selectedKey"',
-                      ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: const Text('Convert'),
-              ),
-            ],
-          ),
-        );
-      },
+    TranslationConversion.convertLanguageConditionToString(
+      context,
+      key,
+      condition,
+      _controllers,
+      _editedTranslations,
+      () => setState(() {}),
     );
   }
 
   void _editLanguageCondition(String key, LanguageConditions condition) {
-    final defaultCondition = _getDefaultLanguageCondition(key);
-    showDialog(
-      context: context,
-      builder: (context) => LanguageConditionEditorDialog(
-        key: Key(key),
-        translationKey: key,
-        initialCondition: condition,
-        defaultCondition: defaultCondition,
-        onSave: (editedCondition) {
-          setState(() {
-            _editedTranslations[key] = editedCondition;
-          });
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Condition updated'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
-      ),
+    final defaultCondition = TranslationHelpers.getDefaultLanguageCondition(
+      key,
+      _defaultLanguage,
+      _helper,
+    );
+    TranslationConversion.editLanguageCondition(
+      context,
+      key,
+      condition,
+      defaultCondition,
+      _editedTranslations,
+      () => setState(() {}),
     );
   }
 
@@ -1089,218 +670,47 @@ class _LanguageImproverState extends State<LanguageImprover>
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Language Improver'),
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        scrolledUnderElevation: 2,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black.withValues(alpha: 0.08),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(12),
-            bottomRight: Radius.circular(12),
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(120),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<LanguageCodes>(
-                          initialValue: _defaultLanguage,
-                          dropdownColor: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          menuMaxHeight: 300,
-                          decoration: InputDecoration(
-                            labelText: 'Default Language',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).dividerColor,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          items: _helper.codes.map((code) {
-                            final isSelected = code == _defaultLanguage;
-                            return DropdownMenuItem(
-                              value: code,
-                              child: Text(
-                                code.name,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) async {
-                            if (value != null && value != _targetLanguage) {
-                              // Ensure data is loaded for the default language
-                              if (!_helper.data.containsKey(value)) {
-                                final currentCode = _helper.code;
-                                // Load data for the default language
-                                await _helper.change(value);
-                                // Restore original language if it was different
-                                if (currentCode != value) {
-                                  await _helper.change(currentCode);
-                                }
-                              }
-                              setState(() {
-                                _defaultLanguage = value;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<LanguageCodes>(
-                          initialValue: _targetLanguage,
-                          dropdownColor: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          menuMaxHeight: 300,
-                          decoration: InputDecoration(
-                            labelText: 'Target Language',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).dividerColor,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          items: _helper.codes
-                              .where((code) => code != _defaultLanguage)
-                              .map((code) {
-                                final isSelected = code == _targetLanguage;
-                                return DropdownMenuItem(
-                                  value: code,
-                                  child: Text(
-                                    code.name,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (value) async {
-                            if (value != null) {
-                              // Ensure data is loaded for the target language
-                              if (!_helper.data.containsKey(value)) {
-                                final currentCode = _helper.code;
-                                // Load data for the target language
-                                await _helper.change(value);
-                                // Restore original language if it was different
-                                if (currentCode != value) {
-                                  await _helper.change(currentCode);
-                                }
-                              }
-                              setState(() {
-                                _targetLanguage = value;
-                                _initializeControllers();
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search translations...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).dividerColor,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      appBar: LanguageImproverAppBar(
+        helper: _helper,
+        defaultLanguage: _defaultLanguage,
+        targetLanguage: _targetLanguage,
+        searchController: _searchController,
+        searchQuery: _searchQuery,
+        onDefaultLanguageChanged: (value) async {
+          if (value != null && value != _targetLanguage) {
+            // Ensure data is loaded for the default language
+            if (!_helper.data.containsKey(value)) {
+              final currentCode = _helper.code;
+              // Load data for the default language
+              await _helper.change(value);
+              // Restore original language if it was different
+              if (currentCode != value) {
+                await _helper.change(currentCode);
+              }
+            }
+            setState(() {
+              _defaultLanguage = value;
+            });
+          }
+        },
+        onTargetLanguageChanged: (value) async {
+          if (value != null) {
+            // Ensure data is loaded for the target language
+            if (!_helper.data.containsKey(value)) {
+              final currentCode = _helper.code;
+              // Load data for the target language
+              await _helper.change(value);
+              // Restore original language if it was different
+              if (currentCode != value) {
+                await _helper.change(currentCode);
+              }
+            }
+            setState(() {
+              _targetLanguage = value;
+              _initializeControllers();
+            });
+          }
+        },
       ),
       body: _filteredKeys.isEmpty
           ? const Center(child: Text('No translations found'))
@@ -1319,8 +729,17 @@ class _LanguageImproverState extends State<LanguageImprover>
                 itemCount: _filteredKeys.length,
                 itemBuilder: (context, index) {
                   final key = _filteredKeys[index];
-                  final defaultText = _getDefaultText(key);
-                  final targetValue = _getTargetValue(key);
+                  final defaultText = TranslationHelpers.getDefaultText(
+                    key,
+                    _defaultLanguage,
+                    _helper,
+                  );
+                  final targetValue = TranslationHelpers.getTargetValue(
+                    key,
+                    _targetLanguage,
+                    _editedTranslations,
+                    _helper,
+                  );
 
                   // Create or get GlobalKey for this translation key
                   if (!_keyMap.containsKey(key)) {
@@ -1346,7 +765,12 @@ class _LanguageImproverState extends State<LanguageImprover>
                     defaultLanguage: _defaultLanguage,
                     targetLanguage: _targetLanguage,
                     textController: _controllers[key],
-                    defaultCondition: _getDefaultLanguageCondition(key),
+                    defaultCondition:
+                        TranslationHelpers.getDefaultLanguageCondition(
+                          key,
+                          _defaultLanguage,
+                          _helper,
+                        ),
                     onCardTap: () => _onCardTap(key),
                     onConvertStringToCondition: targetValue is String
                         ? () => _convertStringToLanguageCondition(
