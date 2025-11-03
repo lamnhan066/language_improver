@@ -224,7 +224,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${defaultLanguage?.name ?? 'Default'.tr}:',
+            '${defaultLanguage?.nativeName ?? 'Default'.tr}:',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -358,7 +358,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${targetLanguage?.name ?? 'Target'.tr}:',
+            '${targetLanguage?.nativeName ?? 'Target'.tr}:',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -429,7 +429,7 @@ class TranslationCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${targetLanguage?.name ?? 'Target'.tr}:',
+                      '${targetLanguage?.nativeName ?? 'Target'.tr}:',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

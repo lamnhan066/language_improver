@@ -52,7 +52,7 @@ class LanguageImprover extends StatelessWidget {
     this.initialDefaultLanguage,
     this.initialTargetLanguage,
     this.search,
-    this.showKey = true,
+    this.showKey = false,
   });
 
   @override

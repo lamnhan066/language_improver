@@ -138,7 +138,7 @@ class _LanguageDropdown extends StatelessWidget {
         return DropdownMenuItem(
           value: code,
           child: Text(
-            code.name,
+            code.nativeName,
             style: TextStyle(
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
