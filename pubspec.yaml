@@ -1,6 +1,6 @@
 name: language_improver
 description: "A Flutter package to enhance, edit, and manage translation strings and conditions for multi-language apps."
-version: 0.0.2
+version: 0.0.2-rc.1
 homepage: https://github.com/lamnhan066/language_improver
 
 environment:
