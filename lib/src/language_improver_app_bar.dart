@@ -21,74 +21,79 @@ class LanguageImproverAppBar extends PreferredSize {
     required this.onTargetLanguageChanged,
     super.key,
   }) : super(
-          preferredSize: const Size.fromHeight(kToolbarHeight + 120),
-          child: const SizedBox.shrink(),
-        );
+         preferredSize: const Size.fromHeight(kToolbarHeight + 120),
+         child: const SizedBox.shrink(),
+       );
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text('Language Improver'.tr),
-      automaticallyImplyLeading: false,
-      elevation: 0,
-      scrolledUnderElevation: 2,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
-      surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(12),
-          bottomRight: Radius.circular(12),
-        ),
-      ),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(120),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.only(
+    return LanguageBuilder(
+      builder: (context) {
+        return AppBar(
+          title: Text('Language Improver'.tr),
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.black.withValues(alpha: 0.08),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(12),
               bottomRight: Radius.circular(12),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(120),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _LanguageDropdown(
-                        value: defaultLanguage,
-                        labelText: 'Default Language'.tr,
-                        items: helper.codes.toList(),
-                        excludeValue: targetLanguage,
-                        onChanged: onDefaultLanguageChanged,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _LanguageDropdown(
+                            value: defaultLanguage,
+                            labelText: 'Default Language'.tr,
+                            items: helper.codes.toList(),
+                            onChanged: onDefaultLanguageChanged,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _LanguageDropdown(
+                            value: targetLanguage,
+                            labelText: 'Target Language'.tr,
+                            items: helper.codes
+                                .where((code) => code != defaultLanguage)
+                                .toList(),
+                            onChanged: onTargetLanguageChanged,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _LanguageDropdown(
-                        value: targetLanguage,
-                        labelText: 'Target Language'.tr,
-                        items: helper.codes.where((code) => code != defaultLanguage).toList(),
-                        onChanged: onTargetLanguageChanged,
-                      ),
+                    const SizedBox(height: 12),
+                    _SearchTextField(
+                      controller: searchController,
+                      searchQuery: searchQuery,
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _SearchTextField(
-                  controller: searchController,
-                  searchQuery: searchQuery,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -98,14 +103,12 @@ class _LanguageDropdown extends StatelessWidget {
   final LanguageCodes? value;
   final String labelText;
   final List<LanguageCodes> items;
-  final LanguageCodes? excludeValue;
   final Future<void> Function(LanguageCodes? value) onChanged;
 
   const _LanguageDropdown({
     required this.value,
     required this.labelText,
     required this.items,
-    this.excludeValue,
     required this.onChanged,
   });
 
@@ -118,14 +121,10 @@ class _LanguageDropdown extends StatelessWidget {
       menuMaxHeight: 300,
       decoration: InputDecoration(
         labelText: labelText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -134,10 +133,7 @@ class _LanguageDropdown extends StatelessWidget {
             width: 2,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: items.map((code) {
         final isSelected = code == value;
@@ -154,9 +150,6 @@ class _LanguageDropdown extends StatelessWidget {
         );
       }).toList(),
       onChanged: (value) {
-        if (excludeValue != null && value == excludeValue) {
-          return;
-        }
         onChanged(value);
       },
     );
@@ -168,10 +161,7 @@ class _SearchTextField extends StatelessWidget {
   final TextEditingController controller;
   final String searchQuery;
 
-  const _SearchTextField({
-    required this.controller,
-    required this.searchQuery,
-  });
+  const _SearchTextField({required this.controller, required this.searchQuery});
 
   @override
   Widget build(BuildContext context) {
@@ -188,14 +178,10 @@ class _SearchTextField extends StatelessWidget {
                 },
               )
             : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -204,12 +190,8 @@ class _SearchTextField extends StatelessWidget {
             width: 2,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
 }
-

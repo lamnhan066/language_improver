@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:language_helper/language_helper.dart';
+import 'package:language_improver/language_improver.dart';
 
 import 'language_condition_editor_dialog.dart';
 
@@ -20,19 +21,304 @@ class TranslationConversion {
     // Show dialog to get parameter name first
     showDialog(
       context: context,
-      builder: (context) {
-        final paramController = TextEditingController(text: 'count');
-        bool isDisposed = false;
+      builder: (context) => LanguageScope(
+        languageHelper: improverLanguage,
+        child: _ParameterNameDialog(
+          stringValue: stringValue,
+          onContinue: (param) {
+            // Create a default LanguageConditions with the current string
+            final newCondition = LanguageConditions(
+              param: param,
+              conditions: {
+                '_': stringValue, // Default condition
+              },
+            );
 
-        return PopScope(
-          canPop: true,
-          onPopInvokedWithResult: (_, _) {
-            if (!isDisposed) {
-              isDisposed = true;
-              paramController.dispose();
-            }
+            // Get default condition for reference
+            final defaultCondition = defaultLanguage != null
+                ? (helper.data[defaultLanguage]?[key] is LanguageConditions
+                      ? helper.data[defaultLanguage]![key] as LanguageConditions
+                      : null)
+                : null;
+
+            // Show the editor to let user add more conditions
+            showDialog(
+              context: context,
+              builder: (context) => LanguageScope(
+                languageHelper: improverLanguage,
+                child: Builder(
+                  builder: (context) {
+                    return LanguageConditionEditorDialog(
+                      key: Key('$key-convert'),
+                      translationKey: key,
+                      initialCondition: newCondition,
+                      defaultCondition: defaultCondition,
+                      onSave: (editedCondition) {
+                        // Get the controller to dispose later
+                        final controllerToDispose = controllers[key];
+
+                        setState();
+
+                        // Remove the controller from the map first
+                        controllers.remove(key);
+
+                        // Update to LanguageConditions
+                        editedTranslations[key] = editedCondition;
+
+                        // Dispose the controller after the frame completes
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          controllerToDispose?.dispose();
+                        });
+
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Tr(
+                              (_) => Text(
+                                'Converted to Condition successfully'.tr,
+                              ),
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            );
           },
-          child: AlertDialog(
+        ),
+      ),
+    );
+  }
+
+  /// Converts a LanguageConditions value to String
+  /// Shows dialog to select which condition value to use
+  static void convertLanguageConditionToString(
+    BuildContext context,
+    String key,
+    LanguageConditions condition,
+    Map<String, TextEditingController> controllers,
+    Map<String, dynamic> editedTranslations,
+    void Function() setState,
+  ) {
+    // Find the default condition value (_ or default) or use the first one
+    String? defaultConditionKey;
+    String? defaultConditionValue;
+
+    // Try to find '_' or 'default' first
+    if (condition.conditions.containsKey('_')) {
+      defaultConditionKey = '_';
+      defaultConditionValue = condition.conditions['_']?.toString();
+    } else if (condition.conditions.containsKey('default')) {
+      defaultConditionKey = 'default';
+      defaultConditionValue = condition.conditions['default']?.toString();
+    } else if (condition.conditions.isNotEmpty) {
+      // Use the first condition if no default found
+      final firstEntry = condition.conditions.entries.first;
+      defaultConditionKey = firstEntry.key;
+      defaultConditionValue = firstEntry.value?.toString();
+    }
+
+    if (defaultConditionValue == null || defaultConditionValue.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Tr((_) => Text('No valid condition value found'.tr)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show dialog to confirm and optionally choose which condition to use
+    showDialog(
+      context: context,
+      builder: (context) {
+        String? selectedKey = defaultConditionKey;
+        String? selectedValue = defaultConditionValue;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) => LanguageScope(
+            languageHelper: improverLanguage,
+            child: LanguageBuilder(
+              builder: (context) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  title: Text('Convert to String'.tr),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select which condition value to use as the string:'
+                              .tr,
+                        ),
+                        const SizedBox(height: 12),
+                        ...condition.conditions.entries.map((e) {
+                          final isDefault =
+                              e.key == '_' ||
+                              e.key == 'default' ||
+                              e.key == selectedKey;
+                          return RadioListTile<String>(
+                            title: Text(
+                              e.key,
+                              style: TextStyle(
+                                fontWeight: isDefault
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              e.value.toString(),
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            value: e.key,
+                            // ignore: deprecated_member_use
+                            groupValue: selectedKey,
+                            // ignore: deprecated_member_use
+                            onChanged: (value) {
+                              setDialogState(() {
+                                selectedKey = value;
+                                selectedValue = e.value?.toString() ?? '';
+                              });
+                            },
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Cancel'.tr),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (selectedKey == null || selectedValue == null) {
+                          return;
+                        }
+                        Navigator.of(context).pop();
+
+                        // Convert to String
+                        setState();
+
+                        // Remove LanguageConditions from edited translations
+                        editedTranslations[key] = selectedValue!;
+
+                        // Create a TextEditingController for the new String value
+                        final controller = TextEditingController(
+                          text: selectedValue!,
+                        );
+                        controller.addListener(() {
+                          editedTranslations[key] = controller.text;
+                        });
+                        controllers[key] = controller;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Converted to String using condition "@{key}"'
+                                  .trP({'key': selectedKey!}),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Text('Convert'.tr),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Opens the LanguageCondition editor dialog
+  static void editLanguageCondition(
+    BuildContext context,
+    String key,
+    LanguageConditions condition,
+    LanguageConditions? defaultCondition,
+    Map<String, dynamic> editedTranslations,
+    void Function() setState,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => LanguageScope(
+        languageHelper: improverLanguage,
+        child: Builder(
+          builder: (context) {
+            return LanguageConditionEditorDialog(
+              key: Key(key),
+              translationKey: key,
+              initialCondition: condition,
+              defaultCondition: defaultCondition,
+              onSave: (editedCondition) {
+                setState();
+                editedTranslations[key] = editedCondition;
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Tr((_) => Text('Condition updated'.tr)),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// StatefulWidget dialog for entering parameter name
+/// Properly manages TextEditingController lifecycle
+class _ParameterNameDialog extends StatefulWidget {
+  final String stringValue;
+  final void Function(String param) onContinue;
+
+  const _ParameterNameDialog({
+    required this.stringValue,
+    required this.onContinue,
+  });
+
+  @override
+  State<_ParameterNameDialog> createState() => _ParameterNameDialogState();
+}
+
+class _ParameterNameDialogState extends State<_ParameterNameDialog> {
+  late final TextEditingController _paramController;
+
+  @override
+  void initState() {
+    super.initState();
+    _paramController = TextEditingController(text: 'count');
+  }
+
+  @override
+  void dispose() {
+    _paramController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LanguageScope(
+      languageHelper: improverLanguage,
+      child: LanguageBuilder(
+        builder: (context) {
+          return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -47,7 +333,7 @@ class TranslationConversion {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: paramController,
+                  controller: _paramController,
                   autofocus: true,
                   decoration: InputDecoration(
                     labelText: 'Parameter Name'.tr,
@@ -110,7 +396,7 @@ class TranslationConversion {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            stringValue,
+                            widget.stringValue,
                             style: TextStyle(
                               fontSize: 12,
                               color: infoTextColor,
@@ -143,248 +429,24 @@ class TranslationConversion {
               ),
               ElevatedButton(
                 onPressed: () {
-                  final param = paramController.text.trim();
+                  final param = _paramController.text.trim();
                   if (param.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Parameter name cannot be empty'.tr),
+                        content: Tr(
+                          (_) => Text('Parameter name cannot be empty'.tr),
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
                     return;
                   }
                   Navigator.of(context).pop();
-
-                  // Create a default LanguageConditions with the current string
-                  final newCondition = LanguageConditions(
-                    param: param,
-                    conditions: {
-                      '_': stringValue, // Default condition
-                    },
-                  );
-
-                  // Get default condition for reference
-                  final defaultCondition = defaultLanguage != null
-                      ? (helper.data[defaultLanguage]?[key]
-                                is LanguageConditions
-                            ? helper.data[defaultLanguage]![key]
-                                  as LanguageConditions
-                            : null)
-                      : null;
-
-                  // Show the editor to let user add more conditions
-                  showDialog(
-                    context: context,
-                    builder: (context) => LanguageConditionEditorDialog(
-                      key: Key('$key-convert'),
-                      translationKey: key,
-                      initialCondition: newCondition,
-                      defaultCondition: defaultCondition,
-                      onSave: (editedCondition) {
-                        // Get the controller to dispose later
-                        final controllerToDispose = controllers[key];
-
-                        setState();
-
-                        // Remove the controller from the map first
-                        controllers.remove(key);
-
-                        // Update to LanguageConditions
-                        editedTranslations[key] = editedCondition;
-
-                        // Dispose the controller after the frame completes
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          controllerToDispose?.dispose();
-                        });
-
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Converted to Condition successfully'.tr,
-                            ),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  );
+                  widget.onContinue(param);
                 },
                 child: Text('Continue'.tr),
               ),
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Converts a LanguageConditions value to String
-  /// Shows dialog to select which condition value to use
-  static void convertLanguageConditionToString(
-    BuildContext context,
-    String key,
-    LanguageConditions condition,
-    Map<String, TextEditingController> controllers,
-    Map<String, dynamic> editedTranslations,
-    void Function() setState,
-  ) {
-    // Find the default condition value (_ or default) or use the first one
-    String? defaultConditionKey;
-    String? defaultConditionValue;
-
-    // Try to find '_' or 'default' first
-    if (condition.conditions.containsKey('_')) {
-      defaultConditionKey = '_';
-      defaultConditionValue = condition.conditions['_']?.toString();
-    } else if (condition.conditions.containsKey('default')) {
-      defaultConditionKey = 'default';
-      defaultConditionValue = condition.conditions['default']?.toString();
-    } else if (condition.conditions.isNotEmpty) {
-      // Use the first condition if no default found
-      final firstEntry = condition.conditions.entries.first;
-      defaultConditionKey = firstEntry.key;
-      defaultConditionValue = firstEntry.value?.toString();
-    }
-
-    if (defaultConditionValue == null || defaultConditionValue.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No valid condition value found'.tr),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Show dialog to confirm and optionally choose which condition to use
-    showDialog(
-      context: context,
-      builder: (context) {
-        String? selectedKey = defaultConditionKey;
-        String? selectedValue = defaultConditionValue;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: Text('Convert to String'.tr),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Select which condition value to use as the string:'.tr),
-                  const SizedBox(height: 12),
-                  ...condition.conditions.entries.map((e) {
-                    final isDefault =
-                        e.key == '_' ||
-                        e.key == 'default' ||
-                        e.key == selectedKey;
-                    return RadioListTile<String>(
-                      title: Text(
-                        e.key,
-                        style: TextStyle(
-                          fontWeight: isDefault
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: Text(
-                        e.value.toString(),
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      value: e.key,
-                      // ignore: deprecated_member_use
-                      groupValue: selectedKey,
-                      // ignore: deprecated_member_use
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedKey = value;
-                          selectedValue = e.value?.toString() ?? '';
-                        });
-                      },
-                    );
-                  }),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Cancel'.tr),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (selectedKey == null || selectedValue == null) {
-                    return;
-                  }
-                  Navigator.of(context).pop();
-
-                  // Convert to String
-                  setState();
-
-                  // Remove LanguageConditions from edited translations
-                  editedTranslations[key] = selectedValue!;
-
-                  // Create a TextEditingController for the new String value
-                  final controller = TextEditingController(
-                    text: selectedValue!,
-                  );
-                  controller.addListener(() {
-                    editedTranslations[key] = controller.text;
-                  });
-                  controllers[key] = controller;
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Converted to String using condition "@{key}"'.trP({
-                          'key': selectedKey!,
-                        }),
-                      ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: Text('Convert'.tr),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Opens the LanguageCondition editor dialog
-  static void editLanguageCondition(
-    BuildContext context,
-    String key,
-    LanguageConditions condition,
-    LanguageConditions? defaultCondition,
-    Map<String, dynamic> editedTranslations,
-    void Function() setState,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => LanguageConditionEditorDialog(
-        key: Key(key),
-        translationKey: key,
-        initialCondition: condition,
-        defaultCondition: defaultCondition,
-        onSave: (editedCondition) {
-          setState();
-          editedTranslations[key] = editedCondition;
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Condition updated'.tr),
-              duration: const Duration(seconds: 2),
-            ),
           );
         },
       ),

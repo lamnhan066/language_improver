@@ -120,34 +120,38 @@ class TranslationCard extends StatelessWidget {
         shadowColor: isFlashing
             ? Colors.blue.withValues(alpha: 0.3)
             : Colors.black.withValues(alpha: 0.08),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Translation key - only show if showKey is true
-              if (showKey) ...[
-                _buildKeySection(context),
-                const SizedBox(height: 12),
-              ],
+        child: LanguageBuilder(
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Translation key - only show if showKey is true
+                  if (showKey) ...[
+                    _buildKeySection(context),
+                    const SizedBox(height: 12),
+                  ],
 
-              // Default language translation
-              if (targetValue is String)
-                _buildDefaultStringSection(context)
-              else if (targetValue is LanguageConditions)
-                _buildDefaultConditionSection(context),
+                  // Default language translation
+                  if (targetValue is String)
+                    _buildDefaultStringSection(context)
+                  else if (targetValue is LanguageConditions)
+                    _buildDefaultConditionSection(context),
 
-              const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-              // Target language translation (editable)
-              if (targetValue is String)
-                _buildTargetStringSection(context, theme, isDark)
-              else if (targetValue is LanguageConditions)
-                _buildTargetConditionSection(context)
-              else
-                _buildTargetOtherSection(context),
-            ],
-          ),
+                  // Target language translation (editable)
+                  if (targetValue is String)
+                    _buildTargetStringSection(context, theme, isDark)
+                  else if (targetValue is LanguageConditions)
+                    _buildTargetConditionSection(context)
+                  else
+                    _buildTargetOtherSection(context),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
