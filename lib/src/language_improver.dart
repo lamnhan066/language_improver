@@ -60,11 +60,9 @@ class LanguageImprover extends StatelessWidget {
     return FutureBuilder(
       future: improverLanguage.initial(
         data: [LanguageDataProvider.lazyData(languageData)],
-        initialCode:
-            initialDefaultLanguage ??
-            languageHelper?.codes.first ??
-            LanguageCodes.en,
-        useInitialCodeWhenUnavailable: true,
+        initialCode: initialDefaultLanguage,
+        isAutoSave: false,
+        syncWithDevice: false,
         isDebug: true,
       ),
       builder: (context, asyncSnapshot) {

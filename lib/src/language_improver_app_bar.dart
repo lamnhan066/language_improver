@@ -74,9 +74,7 @@ class LanguageImproverAppBar extends PreferredSize {
                           child: _LanguageDropdown(
                             value: targetLanguage,
                             labelText: 'Target Language'.tr,
-                            items: helper.codes
-                                .where((code) => code != defaultLanguage)
-                                .toList(),
+                            items: helper.codes.toList(),
                             onChanged: onTargetLanguageChanged,
                           ),
                         ),
