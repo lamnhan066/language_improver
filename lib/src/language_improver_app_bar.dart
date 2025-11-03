@@ -28,7 +28,7 @@ class LanguageImproverAppBar extends PreferredSize {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: const Text('Language Improver'),
+      title: Text('Language Improver'.tr),
       automaticallyImplyLeading: false,
       elevation: 0,
       scrolledUnderElevation: 2,
@@ -62,7 +62,7 @@ class LanguageImproverAppBar extends PreferredSize {
                     Expanded(
                       child: _LanguageDropdown(
                         value: defaultLanguage,
-                        labelText: 'Default Language',
+                        labelText: 'Default Language'.tr,
                         items: helper.codes.toList(),
                         excludeValue: targetLanguage,
                         onChanged: onDefaultLanguageChanged,
@@ -72,7 +72,7 @@ class LanguageImproverAppBar extends PreferredSize {
                     Expanded(
                       child: _LanguageDropdown(
                         value: targetLanguage,
-                        labelText: 'Target Language',
+                        labelText: 'Target Language'.tr,
                         items: helper.codes.where((code) => code != defaultLanguage).toList(),
                         onChanged: onTargetLanguageChanged,
                       ),
@@ -178,7 +178,7 @@ class _SearchTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
-        hintText: 'Search translations...',
+        hintText: 'Search translations...'.tr,
         prefixIcon: const Icon(Icons.search),
         suffixIcon: searchQuery.isNotEmpty
             ? IconButton(

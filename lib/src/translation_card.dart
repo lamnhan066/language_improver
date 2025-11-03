@@ -178,7 +178,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Key:',
+            'Key:'.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -223,7 +223,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${defaultLanguage?.name ?? 'Default'}:',
+            '${defaultLanguage?.name ?? 'Default'.tr}:',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -263,7 +263,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${defaultLanguage?.name ?? 'Default'} (with Condition):',
+            '${defaultLanguage?.name ?? 'Default'.tr} (${'with Condition'.tr}):',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -272,7 +272,7 @@ class TranslationCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Param: ${defaultCondition!.param}',
+            'Param: @{param}'.trP({'param': defaultCondition!.param}),
             style: TextStyle(fontSize: 11, color: Colors.grey[700]),
           ),
           const SizedBox(height: 8),
@@ -357,7 +357,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${targetLanguage?.name ?? 'Target'}:',
+            '${targetLanguage?.name ?? 'Target'.tr}:',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -389,9 +389,9 @@ class TranslationCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onConvertStringToCondition,
               icon: const Icon(Icons.auto_awesome, size: 16),
-              label: const Text(
-                'Convert to Condition',
-                style: TextStyle(fontSize: 12),
+              label: Text(
+                'Convert to Condition'.tr,
+                style: const TextStyle(fontSize: 12),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -428,7 +428,7 @@ class TranslationCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${targetLanguage?.name ?? 'Target'}:',
+                      '${targetLanguage?.name ?? 'Target'.tr}:',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -441,7 +441,7 @@ class TranslationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Param: ${condition.param}',
+                  'Param: @{param}'.trP({'param': condition.param}),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -507,9 +507,9 @@ class TranslationCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onConvertConditionToString,
                     icon: const Icon(Icons.auto_awesome, size: 16),
-                    label: const Text(
-                      'Convert to String',
-                      style: TextStyle(fontSize: 12),
+                    label: Text(
+                      'Convert to String'.tr,
+                      style: const TextStyle(fontSize: 12),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
@@ -539,7 +539,7 @@ class TranslationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${targetLanguage?.name ?? 'Target'}:',
+            '${targetLanguage?.name ?? 'Target'.tr}:',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -548,7 +548,7 @@ class TranslationCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            targetValue?.toString() ?? 'null',
+            targetValue?.toString() ?? 'null'.tr,
             style: TextStyle(fontSize: 14, color: Colors.amber[800]),
           ),
         ],

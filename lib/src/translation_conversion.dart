@@ -36,21 +36,22 @@ class TranslationConversion {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            title: const Text('Convert to Condition'),
+            title: Text('Convert to Condition'.tr),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Enter the parameter name that will be used in the translation:',
+                Text(
+                  'Enter the parameter name that will be used in the translation:'
+                      .tr,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: paramController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    labelText: 'Parameter Name',
-                    hintText: 'e.g., count, number, hours',
+                    labelText: 'Parameter Name'.tr,
+                    hintText: 'e.g., count, number, hours'.tr,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -71,7 +72,7 @@ class TranslationConversion {
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    helperText: 'This parameter will be used in conditions',
+                    helperText: 'This parameter will be used in conditions'.tr,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -100,7 +101,7 @@ class TranslationConversion {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Current value:',
+                            'Current value:'.tr,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -117,7 +118,7 @@ class TranslationConversion {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'This will become the default condition (_)',
+                            'This will become the default condition (_)'.tr,
                             style: TextStyle(
                               fontSize: 11,
                               fontStyle: FontStyle.italic,
@@ -138,15 +139,15 @@ class TranslationConversion {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: const Text('Cancel'),
+                child: Text('Cancel'.tr),
               ),
               ElevatedButton(
                 onPressed: () {
                   final param = paramController.text.trim();
                   if (param.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Parameter name cannot be empty'),
+                      SnackBar(
+                        content: Text('Parameter name cannot be empty'.tr),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -198,18 +199,18 @@ class TranslationConversion {
 
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              'Converted to Condition successfully',
+                              'Converted to Condition successfully'.tr,
                             ),
-                            duration: Duration(seconds: 2),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       },
                     ),
                   );
                 },
-                child: const Text('Continue'),
+                child: Text('Continue'.tr),
               ),
             ],
           ),
@@ -248,8 +249,8 @@ class TranslationConversion {
 
     if (defaultConditionValue == null || defaultConditionValue.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No valid condition value found'),
+        SnackBar(
+          content: Text('No valid condition value found'.tr),
           backgroundColor: Colors.red,
         ),
       );
@@ -268,15 +269,13 @@ class TranslationConversion {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            title: const Text('Convert to String'),
+            title: Text('Convert to String'.tr),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Select which condition value to use as the string:',
-                  ),
+                  Text('Select which condition value to use as the string:'.tr),
                   const SizedBox(height: 12),
                   ...condition.conditions.entries.map((e) {
                     final isDefault =
@@ -316,7 +315,7 @@ class TranslationConversion {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: Text('Cancel'.tr),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -343,14 +342,16 @@ class TranslationConversion {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Converted to String using condition "$selectedKey"',
+                        'Converted to String using condition "@{key}"'.trP({
+                          'key': selectedKey!,
+                        }),
                       ),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 },
-                child: const Text('Convert'),
+                child: Text('Convert'.tr),
               ),
             ],
           ),
@@ -380,9 +381,9 @@ class TranslationConversion {
           editedTranslations[key] = editedCondition;
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Condition updated'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text('Condition updated'.tr),
+              duration: const Duration(seconds: 2),
             ),
           );
         },

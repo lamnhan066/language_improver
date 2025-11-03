@@ -553,9 +553,9 @@ class _LanguageImproverState extends State<LanguageImprover>
     if (changedTranslations.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No changes to save'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text('No changes to save'.tr),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -576,7 +576,10 @@ class _LanguageImproverState extends State<LanguageImprover>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${changedTranslations.length} translation${changedTranslations.length == 1 ? '' : 's'} saved successfully',
+            '@{count} translation@{plural} saved successfully'.trP({
+              'count': changedTranslations.length.toString(),
+              'plural': changedTranslations.length == 1 ? '' : 's',
+            }),
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -593,9 +596,9 @@ class _LanguageImproverState extends State<LanguageImprover>
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Changes discarded'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text('Changes discarded'.tr),
+          duration: const Duration(seconds: 2),
         ),
       );
 
@@ -651,7 +654,7 @@ class _LanguageImproverState extends State<LanguageImprover>
     if (_helper.codes.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Language Improver'),
+          title: Text('Language Improver'.tr),
           elevation: 0,
           scrolledUnderElevation: 2,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -665,7 +668,7 @@ class _LanguageImproverState extends State<LanguageImprover>
             ),
           ),
         ),
-        body: const Center(child: Text('No languages available')),
+        body: Center(child: Text('No languages available'.tr)),
       );
     }
 
@@ -713,7 +716,7 @@ class _LanguageImproverState extends State<LanguageImprover>
         },
       ),
       body: _filteredKeys.isEmpty
-          ? const Center(child: Text('No translations found'))
+          ? Center(child: Text('No translations found'.tr))
           : Container(
               color: Theme.of(context).scaffoldBackgroundColor,
               child: ListView.separated(
@@ -800,9 +803,12 @@ class _LanguageImproverState extends State<LanguageImprover>
             OutlinedButton.icon(
               onPressed: _cancelEditing,
               icon: const Icon(Icons.close, size: 20),
-              label: const Text(
-                'Cancel',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              label: Text(
+                'Cancel'.tr,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -824,9 +830,12 @@ class _LanguageImproverState extends State<LanguageImprover>
             ElevatedButton.icon(
               onPressed: _saveTranslations,
               icon: const Icon(Icons.save, size: 20),
-              label: const Text(
-                'Save',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              label: Text(
+                'Save'.tr,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(

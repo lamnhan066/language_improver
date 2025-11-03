@@ -78,17 +78,17 @@ class LanguageConditionEditorDialogState
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Add Condition'),
+        title: Text('Add Condition'.tr),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter condition key:'),
+            Text('Enter condition key:'.tr),
             const SizedBox(height: 8),
             TextField(
               controller: controller,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: 'e.g., 0, 1, _ or default',
+                hintText: 'e.g., 0, 1, _ or default'.tr,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -107,7 +107,7 @@ class LanguageConditionEditorDialogState
                   horizontal: 12,
                   vertical: 8,
                 ),
-                helperText: 'Common keys: 0, 1, 2, _ (default)',
+                helperText: 'Common keys: 0, 1, 2, _ (default)'.tr,
               ),
             ),
           ],
@@ -118,15 +118,15 @@ class LanguageConditionEditorDialogState
               controller.dispose();
               Navigator.of(context).pop();
             },
-            child: const Text('Cancel'),
+            child: Text('Cancel'.tr),
           ),
           TextButton(
             onPressed: () {
               final value = controller.text.trim();
               if (value.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Condition key cannot be empty'),
+                  SnackBar(
+                    content: Text('Condition key cannot be empty'.tr),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -135,7 +135,11 @@ class LanguageConditionEditorDialogState
               if (_conditionKeys.contains(value)) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Condition key "$value" already exists'),
+                    content: Text(
+                      'Condition key "@{key}" already exists'.trP({
+                        'key': value,
+                      }),
+                    ),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -164,7 +168,7 @@ class LanguageConditionEditorDialogState
                 });
               });
             },
-            child: const Text('Add'),
+            child: Text('Add'.tr),
           ),
         ],
       ),
@@ -182,8 +186,8 @@ class LanguageConditionEditorDialogState
   void _save() {
     if (_paramController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parameter name cannot be empty'),
+        SnackBar(
+          content: Text('Parameter name cannot be empty'.tr),
           backgroundColor: Colors.red,
         ),
       );
@@ -192,8 +196,8 @@ class LanguageConditionEditorDialogState
 
     if (_conditionKeys.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('At least one condition is required'),
+        SnackBar(
+          content: Text('At least one condition is required'.tr),
           backgroundColor: Colors.red,
         ),
       );
@@ -206,7 +210,9 @@ class LanguageConditionEditorDialogState
       if (controller == null || controller.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Condition "$key" cannot be empty'),
+            content: Text(
+              'Condition "@{key}" cannot be empty'.trP({'key': key}),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -266,7 +272,7 @@ class LanguageConditionEditorDialogState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Edit Condition',
+                              'Edit Condition'.tr,
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 18,
@@ -342,7 +348,7 @@ class LanguageConditionEditorDialogState
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Reference (Default Language)',
+                                      'Reference (Default Language)'.tr,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
@@ -353,7 +359,9 @@ class LanguageConditionEditorDialogState
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Parameter: ${widget.defaultCondition!.param}',
+                                  'Parameter: @{param}'.trP({
+                                    'param': widget.defaultCondition!.param,
+                                  }),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -362,7 +370,7 @@ class LanguageConditionEditorDialogState
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Conditions:',
+                                  'Conditions:'.tr,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -448,8 +456,8 @@ class LanguageConditionEditorDialogState
                     TextField(
                       controller: _paramController,
                       decoration: InputDecoration(
-                        labelText: 'Parameter Name',
-                        hintText: 'e.g., count, hours, number',
+                        labelText: 'Parameter Name'.tr,
+                        hintText: 'e.g., count, hours, number'.tr,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -471,7 +479,7 @@ class LanguageConditionEditorDialogState
                           vertical: 8,
                         ),
                         helperText:
-                            'The parameter used in the translation text',
+                            'The parameter used in the translation text'.tr,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -480,9 +488,9 @@ class LanguageConditionEditorDialogState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Conditions',
-                          style: TextStyle(
+                        Text(
+                          'Conditions'.tr,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -490,7 +498,7 @@ class LanguageConditionEditorDialogState
                         TextButton.icon(
                           onPressed: _addCondition,
                           icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add Condition'),
+                          label: Text('Add Condition'.tr),
                         ),
                       ],
                     ),
@@ -510,7 +518,7 @@ class LanguageConditionEditorDialogState
                             ),
                             child: Center(
                               child: Text(
-                                'No conditions. Add one to get started.',
+                                'No conditions. Add one to get started.'.tr,
                                 style: TextStyle(
                                   color: theme.colorScheme.onSurface.withValues(
                                     alpha: 0.6,
@@ -607,7 +615,7 @@ class LanguageConditionEditorDialogState
                                                   BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              'DEFAULT',
+                                              'DEFAULT'.tr,
                                               style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -626,7 +634,7 @@ class LanguageConditionEditorDialogState
                                       color: Colors.red,
                                       onPressed: () =>
                                           _removeCondition(conditionKey),
-                                      tooltip: 'Remove Condition',
+                                      tooltip: 'Remove Condition'.tr,
                                     ),
                                   ],
                                 ),
@@ -634,9 +642,10 @@ class LanguageConditionEditorDialogState
                                 TextField(
                                   controller: controller,
                                   decoration: InputDecoration(
-                                    labelText: 'Translation Value',
+                                    labelText: 'Translation Value'.tr,
                                     hintText:
-                                        'Enter translation for this condition',
+                                        'Enter translation for this condition'
+                                            .tr,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -661,6 +670,7 @@ class LanguageConditionEditorDialogState
                                     ),
                                     helperText: isDefault
                                         ? 'Used when no other condition matches'
+                                              .tr
                                         : null,
                                   ),
                                   maxLines: null,
@@ -713,13 +723,13 @@ class LanguageConditionEditorDialogState
                           foregroundColor: colorScheme.outline,
                           backgroundColor: theme.scaffoldBackgroundColor,
                         ),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel'.tr),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
                         onPressed: _save,
                         icon: const Icon(Icons.save, size: 20),
-                        label: const Text('Save'),
+                        label: Text('Save'.tr),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -744,4 +754,3 @@ class LanguageConditionEditorDialogState
     );
   }
 }
-

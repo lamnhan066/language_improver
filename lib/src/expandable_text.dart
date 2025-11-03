@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:language_helper/language_helper.dart';
 
 /// Expandable text widget that shows long text with expand/collapse functionality
 class ExpandableText extends StatefulWidget {
@@ -65,7 +66,7 @@ class ExpandableTextState extends State<ExpandableText> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '$textLength chars',
+                    '@{count} chars'.trP({'count': textLength.toString()}),
                     style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                   ),
                 ),
@@ -86,7 +87,7 @@ class ExpandableTextState extends State<ExpandableText> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _isExpanded ? 'Show less' : 'Show more',
+                        _isExpanded ? 'Show less'.tr : 'Show more'.tr,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).primaryColor,
