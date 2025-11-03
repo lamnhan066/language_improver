@@ -163,33 +163,40 @@ class _SearchTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: 'Search translations...'.tr,
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  controller.clear();
-                },
-              )
-            : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 2,
+    return LanguageBuilder(
+      builder: (context) {
+        return TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: 'Search translations...'.tr,
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      controller.clear();
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
           ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
+        );
+      },
     );
   }
 }
