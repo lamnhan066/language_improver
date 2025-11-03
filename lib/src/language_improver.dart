@@ -745,9 +745,7 @@ class _LanguageImproverState extends State<LanguageImprover>
                   );
 
                   // Create or get GlobalKey for this translation key
-                  if (!_keyMap.containsKey(key)) {
-                    _keyMap[key] = GlobalKey();
-                  }
+                  _keyMap.putIfAbsent(key, () => GlobalKey());
                   final cardKey = _keyMap[key]!;
 
                   // Get flash animation value if this key is flashing
@@ -757,7 +755,6 @@ class _LanguageImproverState extends State<LanguageImprover>
                       : 0.0;
 
                   return TranslationCard(
-                    key: cardKey,
                     cardKey: cardKey,
                     translationKey: key,
                     defaultText: defaultText,
