@@ -121,18 +121,18 @@ packages:
     dependency: transitive
     description:
       name: language_code
-      sha256: "3993948ea689ec3bc4d3d9286fade89a9f865da38d94d34b5d06d268d4f32fa5"
+      sha256: "242048299744e1e1ed5580151dbfbf340fae1085480d87a03ecf948627b8e64f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.5"
+    version: "0.6.0-rc.4"
   language_helper:
     dependency: "direct main"
     description:
       name: language_helper
-      sha256: "3f74106ad23aea3d82616284f4109630203895c143e5f762d821c9fe748c254c"
+      sha256: "1928eed33db8a165ffa661156c4afe5f493cb32056619a069b8246326e5b498f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.0-rc.4"
+    version: "0.13.0-rc.6"
   language_improver:
     dependency: "direct main"
     description:

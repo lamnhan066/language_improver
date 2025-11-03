@@ -141,9 +141,9 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () =>
-                    _openLanguageImproverWithScroll(context, 'profile'),
+                    _openLanguageImproverWithSearch(context, 'profile'),
                 icon: const Icon(Icons.search),
-                label: const Text('Open & Scroll to "profile"'),
+                label: const Text('Open & Search for "profile"'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage> {
         builder: (context) => LanguageImprover(
           languageHelper: LanguageHelper.instance,
           onTranslationsUpdated: (updatedTranslations) {
-            _handleTranslationsUpdated(updatedTranslations);
+            _handleTranslationsUpdated(context, updatedTranslations);
           },
           onCancel: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -258,16 +258,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openLanguageImproverWithScroll(BuildContext context, String key) {
+  void _openLanguageImproverWithSearch(BuildContext context, String key) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => LanguageImprover(
           languageHelper: LanguageHelper.instance,
-          scrollToKey: key,
-          autoSearchOnScroll: false,
+          search: key,
           onTranslationsUpdated: (updatedTranslations) {
-            _handleTranslationsUpdated(updatedTranslations);
+            _handleTranslationsUpdated(context, updatedTranslations);
           },
           onCancel: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -291,11 +290,10 @@ class _HomePageState extends State<HomePage> {
           initialDefaultLanguage: LanguageCodes.en,
           initialTargetLanguage: LanguageCodes.vi,
           showKey: true,
-          autoSearchOnScroll: false,
           onTranslationsUpdated: (updatedTranslations) async {
             // Simulate async save operation
             await Future.delayed(const Duration(milliseconds: 500));
-            _handleTranslationsUpdated(updatedTranslations);
+            _handleTranslationsUpdated(context, updatedTranslations);
           },
           onCancel: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -311,6 +309,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleTranslationsUpdated(
+    BuildContext context,
     Map<LanguageCodes, Map<String, dynamic>> updatedTranslations,
   ) {
     debugPrint('=== Translations Updated ===');
@@ -335,14 +334,16 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Successfully updated ${updatedTranslations.values.fold<int>(0, (sum, map) => sum + map.length)} translation(s)',
+    if (mounted && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Successfully updated ${updatedTranslations.values.fold<int>(0, (sum, map) => sum + map.length)} translation(s)',
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.green,
         ),
-        duration: const Duration(seconds: 3),
-        backgroundColor: Colors.green,
-      ),
-    );
+      );
+    }
   }
 }
