@@ -10,12 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  language_helper: ^0.13.0-rc.8
+  language_helper: ^0.13.0-rc.12
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   shared_preferences: ^2.5.3
-  language_helper_generator: ^0.7.3
+  language_helper_generator: ^0.8.2
 

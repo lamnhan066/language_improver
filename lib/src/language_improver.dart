@@ -324,13 +324,9 @@ class _LanguageImproverState extends State<_LanguageImprover>
 
       // Check both data and dataOverrides
       final data = _helper.data[code];
-      final dataOverrides = _helper.dataOverrides[code];
 
       if (data != null) {
         _allKeys.addAll(data.keys);
-      }
-      if (dataOverrides != null) {
-        _allKeys.addAll(dataOverrides.keys);
       }
     }
 
@@ -338,12 +334,8 @@ class _LanguageImproverState extends State<_LanguageImprover>
     if (_allKeys.isEmpty) {
       await _ensureDataLoaded(_helper.code);
       final currentData = _helper.data[_helper.code];
-      final currentOverrides = _helper.dataOverrides[_helper.code];
       if (currentData != null) {
         _allKeys.addAll(currentData.keys);
-      }
-      if (currentOverrides != null) {
-        _allKeys.addAll(currentOverrides.keys);
       }
     }
 
@@ -356,8 +348,7 @@ class _LanguageImproverState extends State<_LanguageImprover>
   /// Ensure data is loaded for a specific language code
   Future<void> _ensureDataLoaded(LanguageCodes code) async {
     // Check if data is already loaded
-    if (_helper.data.containsKey(code) ||
-        _helper.dataOverrides.containsKey(code)) {
+    if (_helper.data.containsKey(code)) {
       return;
     }
 
@@ -380,15 +371,12 @@ class _LanguageImproverState extends State<_LanguageImprover>
     if (_targetLanguage == null) return;
 
     // Check both data and dataOverrides (overrides take precedence)
-    final targetData =
-        _helper.dataOverrides[_targetLanguage] ?? _helper.data[_targetLanguage];
+    final targetData = _helper.data[_targetLanguage];
     if (targetData == null) return;
 
     for (final key in _allKeys) {
-      // Get value from overrides first, then data
-      final value =
-          _helper.dataOverrides[_targetLanguage]?[key] ??
-          _helper.data[_targetLanguage]?[key];
+      // Get value from data
+      final value = _helper.data[_targetLanguage]?[key];
 
       if (value is String) {
         // Handle empty strings - they are valid values

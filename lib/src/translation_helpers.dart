@@ -11,9 +11,7 @@ class TranslationHelpers {
     if (defaultLanguage == null) return '';
 
     // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        helper.dataOverrides[defaultLanguage]?[key] ??
-        helper.data[defaultLanguage]?[key];
+    final value = helper.data[defaultLanguage]?[key];
 
     if (value == null) return '';
     if (value is String) return value;
@@ -42,9 +40,7 @@ class TranslationHelpers {
     if (targetLanguage == null) return '';
 
     // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        helper.dataOverrides[targetLanguage]?[key] ??
-        helper.data[targetLanguage]?[key];
+    final value = helper.data[targetLanguage]?[key];
 
     if (value == null) return '';
     if (value is String) return value;
@@ -68,8 +64,7 @@ class TranslationHelpers {
     if (targetLanguage == null) return null;
 
     // Check both dataOverrides and data (overrides take precedence)
-    return helper.dataOverrides[targetLanguage]?[key] ??
-        helper.data[targetLanguage]?[key];
+    return helper.data[targetLanguage]?[key];
   }
 
   /// Gets the default language condition for a given key
@@ -81,9 +76,7 @@ class TranslationHelpers {
     if (defaultLanguage == null) return null;
 
     // Check both dataOverrides and data (overrides take precedence)
-    final value =
-        helper.dataOverrides[defaultLanguage]?[key] ??
-        helper.data[defaultLanguage]?[key];
+    final value = helper.data[defaultLanguage]?[key];
 
     if (value is LanguageConditions) {
       return value;
@@ -128,4 +121,3 @@ class TranslationHelpers {
     return original != current;
   }
 }
-
