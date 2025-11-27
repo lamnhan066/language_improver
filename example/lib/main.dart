@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:language_helper/language_helper.dart';
 import 'package:language_improver/language_improver.dart';
 
+import 'languages/codes.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize LanguageHelper with sample translations
   await LanguageHelper.instance.initial(
-    data: [LanguageDataProvider.data(sampleTranslations)],
+    data: [LanguageDataProvider.data(languageData)],
     initialCode: LanguageCodes.en,
     useInitialCodeWhenUnavailable: false,
     isDebug: true,
@@ -15,64 +17,6 @@ void main() async {
 
   runApp(const MyApp());
 }
-
-// Sample translation data
-LanguageData sampleTranslations = {
-  LanguageCodes.en: {
-    'welcome': 'Welcome',
-    'hello': 'Hello',
-    'goodbye': 'Goodbye',
-    'thank_you': 'Thank you',
-    'please': 'Please',
-    'items_count': const LanguageConditions(
-      param: 'count',
-      conditions: {'0': 'No items', '1': '1 item', '_': '@{count} items'},
-    ),
-    'user_greeting': 'Hello, @{name}!',
-    'settings': 'Settings',
-    'language': 'Language',
-    'theme': 'Theme',
-    'about': 'About',
-    'profile': 'Profile',
-    'logout': 'Logout',
-  },
-  LanguageCodes.vi: {
-    'welcome': 'Chào mừng',
-    'hello': 'Xin chào',
-    'goodbye': 'Tạm biệt',
-    'thank_you': 'Cảm ơn',
-    'please': 'Xin lỗi',
-    'items_count': const LanguageConditions(
-      param: 'count',
-      conditions: {'0': 'Không có mục', '1': '1 mục', '_': '@{count} mục'},
-    ),
-    'user_greeting': 'Xin chào, @{name}!',
-    'settings': 'Cài đặt',
-    'language': 'Ngôn ngữ',
-    'theme': 'Giao diện',
-    'about': 'Giới thiệu',
-    'profile': 'Hồ sơ',
-    'logout': 'Đăng xuất',
-  },
-  LanguageCodes.zh: {
-    'welcome': '欢迎',
-    'hello': '你好',
-    'goodbye': '再见',
-    'thank_you': '谢谢',
-    'please': '请',
-    'items_count': const LanguageConditions(
-      param: 'count',
-      conditions: {'0': '没有项目', '1': '1 项目', '_': '@{count} 项目'},
-    ),
-    'user_greeting': '你好, @{name}!',
-    'settings': '设置',
-    'language': '语言',
-    'theme': '主题',
-    'about': '关于',
-    'profile': '个人资料',
-    'logout': '登出',
-  },
-};
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -197,10 +141,67 @@ class _HomePageState extends State<HomePage> {
               const Divider(),
               const SizedBox(height: 16),
               _buildCurrentLanguageInfo(),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              _buildLanguages(),
+              const SizedBox(height: 16),
+              _buildChangeLanguage(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLanguages() {
+    return LanguageBuilder(
+      builder: (context) {
+        return Column(
+          children: [
+            Text('Welcome'.tr),
+            Text('Hello'.tr),
+            Text('Goodbye'.tr),
+            Text('Thank you'.tr),
+            Text('Please'.tr),
+            Text('@{count} items'.trP({'count': 0})),
+            Text('@{count} items'.trP({'count': 1})),
+            Text('@{count} items'.trP({'count': 2})),
+            Text('@{count} items'.trP({'count': 3})),
+            Text('Hello, @{name}!'.trP({'name': 'John'})),
+            Text('Settings'.tr),
+            Text('Language'.tr),
+            Text('Theme'.tr),
+            Text('About'.tr),
+            Text('Profile'.tr),
+            Text('Logout'.tr),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildChangeLanguage() {
+    final helper = LanguageHelper.instance;
+    return LanguageBuilder(
+      builder: (context) {
+        return Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8,
+          children: [
+            for (final code in helper.codes)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: helper.code == code ? Colors.green : null,
+                  foregroundColor: helper.code == code ? Colors.white : null,
+                ),
+                onPressed: () => helper.change(code),
+                child: Text(code.nativeName),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -290,7 +291,10 @@ class _HomePageState extends State<HomePage> {
           onTranslationsUpdated: (updatedTranslations) async {
             // Simulate async save operation
             await Future.delayed(const Duration(milliseconds: 500));
-            _handleTranslationsUpdated(context, updatedTranslations);
+
+            if (context.mounted) {
+              _handleTranslationsUpdated(context, updatedTranslations);
+            }
           },
           onCancel: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -318,6 +322,10 @@ class _HomePageState extends State<HomePage> {
       debugPrint('Number of keys updated: ${translations.length}');
       debugPrint('');
     }
+
+    LanguageHelper.instance.addProvider(
+      LanguageDataProvider.data(updatedTranslations),
+    );
 
     // Update UI with the first updated key (if any)
     if (updatedTranslations.isNotEmpty) {
